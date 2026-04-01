@@ -88,7 +88,7 @@ end
 
 function clear_map_cache(parity, full_clear)
     if debug_channel("map") then
-        dsay((full_clear and "Full clearing" or "Clearing")
+        note_decision("MAP", (full_clear and "Full clearing" or "Clearing")
             .. " map cache for slot " .. tostring(parity))
     end
 
@@ -132,12 +132,12 @@ function find_features(feats, radius)
     for pos in square_iter(const.origin, radius, true) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Searched features in block " .. tostring(i / 1000)
+                note_decision("MAP", "Searched features in block " .. tostring(i / 1000)
                     .. " of map positions")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         local feat = view.feature_at(pos.x, pos.y)
@@ -177,12 +177,12 @@ function find_map_items(item_names, radius)
     for pos in square_iter(const.origin, radius, true) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Searched items in block " .. tostring(i / 1000)
+                note_decision("MAP", "Searched items in block " .. tostring(i / 1000)
                     .. " of map positions")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         local floor_items = items.get_items_at(pos.x, pos.y)
@@ -211,7 +211,7 @@ end
 
 function distance_map_remove(dist_map)
     if debug_channel("map") then
-        dsay("Removing " .. (permanent and "permanent" or "temporary")
+        note_decision("MAP", "Removing " .. (permanent and "permanent" or "temporary")
             .. " distance map at "
             .. cell_string_from_map_position(dist_map.pos))
     end
@@ -244,7 +244,7 @@ function distance_map_initialize(pos, permanent, radius)
     end
 
     if debug_channel("map") then
-        dsay("Creating " .. (permanent and "permanent" or "temporary")
+        note_decision("MAP", "Creating " .. (permanent and "permanent" or "temporary")
             .. " distance map at "
             .. cell_string_from_map_position(pos))
     end
@@ -351,7 +351,7 @@ function distance_map_propagate(dist_map)
     end
 
     if debug_channel("map") then
-        dsay("Propagating distance map at "
+        note_decision("MAP", "Propagating distance map at "
             .. cell_string_from_map_position(dist_map.pos)
             .. " with " .. tostring(#dist_map.queue) .. " update positions")
     end
@@ -361,13 +361,13 @@ function distance_map_propagate(dist_map)
     while ind <= #dist_map.queue do
         if qw.coroutine_throttle and count % 300 == 0 then
             if debug_channel("throttle") then
-                dsay("Propagated block " .. tostring(count / 300)
+                note_decision("MAP", "Propagated block " .. tostring(count / 300)
                     .. " with " .. tostring(#dist_map.queue - ind)
                     .. " positions remaining")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         local center = dist_map.queue[ind]
@@ -464,8 +464,7 @@ function distance_map_update_position(pos, dist_map, map_select)
 end
 
 function has_exclusion_center_at(pos)
-    local hash = hash_position(position_sum(qw.map_pos, pos))
-    return c_persist.exclusions[where] and c_persist.exclusions[where][hash]
+    return false
 end
 
 --[[
@@ -474,7 +473,7 @@ Are the given map coordinates unexcluded according to the exclusion map cache?
 @treturn boolean True if coordinates are unexcluded, false otherwise.
 --]]
 function map_is_unexcluded_at(pos)
-    return exclusion_map[pos.x][pos.y]
+    return true
 end
 
 function unexcluded_at(pos)
@@ -648,12 +647,12 @@ function update_map_cells()
     while ind <= #queue do
         if qw.coroutine_throttle and count % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Updated map in block " .. tostring(count / 1000)
+                note_decision("MAP", "Updated map in block " .. tostring(count / 1000)
                     .. " with " .. tostring(#queue - ind) .. " cells remaining")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         local cell = queue[ind]
@@ -675,12 +674,12 @@ function update_distance_maps_at_cells(queue, map_select)
     for i, cell in ipairs(queue) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Updated distance maps in block " .. tostring(i / 1000)
+                note_decision("MAP", "Updated distance maps in block " .. tostring(i / 1000)
                     .. " with " .. tostring(#queue - i) .. " cells remaining")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         for _, dist_map in pairs(distance_maps) do
@@ -791,7 +790,7 @@ function update_distance_maps(queue, reset)
     local excluded_only = reset == const.map_select.excluded
     if reset > const.map_select.none then
         if debug_channel("map") then
-            dsay("Resetting "
+            note_decision("MAP", "Resetting "
                 .. (excluded_only and "excluded map" or "both maps")
                 .. " for all distance maps")
         end
@@ -964,13 +963,13 @@ function remove_exclusions(record_only)
         local pos = position_difference(unhash_position(hash), qw.map_pos)
         if view.in_known_map_bounds(pos.x, pos.y) then
             if debug_channel("combat") then
-                dsay("Unexcluding position "
+                note_decision("MAP", "Unexcluding position "
                     .. cell_string_from_map_position(pos))
             end
 
-            travel.del_exclude(pos.x, pos.y)
+            -- travel.del_exclude(pos.x, pos.y)
         elseif debug_channel("combat") then
-            dsay("Ignoring out of bounds exclusion coordinates "
+            note_decision("MAP", "Ignoring out of bounds exclusion coordinates "
                 .. pos_string(pos))
         end
     end
@@ -978,24 +977,7 @@ function remove_exclusions(record_only)
 end
 
 function exclude_position(pos)
-    if debug_channel("map") then
-        local desc
-        local mons = get_monster_at(pos)
-        if mons then
-            desc = mons:name()
-        else
-            desc = view.feature_at(pos.x, pos.y)
-        end
-        dsay("Excluding " .. desc .. " at " .. pos_string(pos))
-    end
-
-    local hash = hash_position(position_sum(qw.map_pos, pos))
-    if not c_persist.exclusions[where] then
-        c_persist.exclusions[where] = {}
-    end
-    c_persist.exclusions[where][hash] = true
-
-    travel.set_exclude(pos.x, pos.y)
+    return
 end
 
 function level_has_exclusions(branch, depth)
@@ -1003,73 +985,7 @@ function level_has_exclusions(branch, depth)
 end
 
 function update_exclusions(new_waypoint)
-    if new_waypoint then
-        remove_exclusions()
-    end
-
-    -- We're unlikely to be able to run away when mesmerised.
-    if you.mesmerised() then
-        return
-    end
-
-    -- Monsters we can't reach via melee or ranged attack that also can't move
-    -- to our melee range get excluded immediately.
-    local auto_exclude = {}
-    local ranged_attack = get_ranged_attack()
-    for _, enemy in ipairs(qw.enemy_list) do
-        if not has_exclusion_center_at(enemy:pos())
-                -- No excluding safe monsters.
-                and not enemy:is_safe()
-                -- No excluding temporary monsters.
-                and not enemy:is_summoned()
-                -- We need to at least see all cells adjacent to them to be
-                -- so our movement evaluation is reasonably correct.
-                and enemy:adjacent_cells_known()
-                -- We can't move into melee range...
-                and not enemy:player_has_path_to_melee()
-                -- ... they can't move to where we could melee them
-                and not enemy:player_can_wait_for_melee()
-                -- ... and we can't target them with a ranged attack
-                and not (ranged_attack
-                    and enemy:player_has_line_of_fire(ranged_attack.index))
-                -- ... and we know that we don't want to dig them out.
-                and not enemy:should_dig_unreachable() then
-            table.insert(auto_exclude, enemy:pos())
-        end
-    end
-    if #auto_exclude > 0 then
-        for _, pos in ipairs(auto_exclude) do
-            exclude_position(pos)
-        end
-        return
-    end
-
-    -- We potentially exclude monsters that can't reach our position when we've
-    -- tried to fight them from full HP. To make this assessment, we track the
-    -- last turn a monster could reach us.
-    for _, enemy in ipairs(qw.enemy_list) do
-        if not enemy:is_summoned() and enemy:has_path_to_player() then
-            qw.incoming_monsters_turn = you.turns()
-            return
-        end
-    end
-
-    -- If we've been trying to attack monsters that can't reach our position
-    -- and get to low HP, we wan't to exclude them and end the fight. We
-    -- additionally require that we've been at full HP since the last turn were
-    -- we had incoming monsters. This way if we fight a mix of some monsters
-    -- that can reach us and some that can't, we'll deal with the monsters that
-    -- can't only after finishing off the monsters that can and then resting to
-    -- full HP.
-    if qw.full_hp_turn > 0
-            and qw.full_hp_turn >= qw.incoming_monsters_turn
-            and hp_is_low(50) then
-        for _, enemy in ipairs(qw.enemy_list) do
-            if not enemy:is_summoned() then
-                exclude_position(enemy:pos())
-            end
-        end
-    end
+    return
 end
 
 function want_to_use_transporters()
@@ -1088,6 +1004,7 @@ function update_transporters()
             transp_map[transp_search_zone][transp_search_count] = transp_zone
             transp_search_zone = nil
             transp_search_count = nil
+            qw.transp_search_fails = 0
             if feat == "transporter" then
                 transp_search = transp_zone
             end

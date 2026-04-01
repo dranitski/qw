@@ -233,7 +233,7 @@ function best_retreat_position_func(attacking_limit)
     end
 
     if debug_channel("retreat") then
-        dsay("Calculating best retreat position with attacking limit "
+        note_decision("RETREAT", "Calculating best retreat position with attacking limit "
             .. tostring(attacking_limit))
     end
 
@@ -241,7 +241,7 @@ function best_retreat_position_func(attacking_limit)
     -- Our current location can't significantly improve.
     if cur_result and cur_result.num_attacking <= 1 then
         if debug_channel("retreat") then
-            dsay("Can't improve retreat position over current location with "
+            note_decision("RETREAT", "Can't improve retreat position over current location with "
                 .. tostring(cur_result.num_attacking) .. " attacking monster(s)")
         end
 
@@ -266,12 +266,12 @@ function best_retreat_position_func(attacking_limit)
     for pos in radius_iter(qw.map_pos, radius) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Searched block " .. tostring(i / 1000)
+                note_decision("RETREAT", "Searched block " .. tostring(i / 1000)
                     .. " of potential retreat positions")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         if supdist(pos) <= const.gxm
@@ -300,7 +300,7 @@ function best_retreat_position_func(attacking_limit)
 
     if debug_channel("retreat") then
         if best_result then
-            dsay("Found best retreat position at "
+            note_decision("RETREAT", "Found best retreat position at "
                 .. cell_string_from_map_position(best_result.map_pos)
                 .. " with distance " .. tostring(best_result.dist)
                 .. " and " .. tostring(best_result.num_blocking)
@@ -308,7 +308,7 @@ function best_retreat_position_func(attacking_limit)
                 .. " and " .. tostring(best_result.num_attacking)
                 .. " monsters attacking at destination")
         else
-            dsay("No valid retreat position found")
+            note_decision("RETREAT", "No valid retreat position found")
         end
     end
 
@@ -317,7 +317,7 @@ function best_retreat_position_func(attacking_limit)
         return
     elseif best_result.dist == 0 then
         if debug_channel("retreat") then
-            dsay("Already at best retreat position")
+            note_decision("RETREAT", "Already at best retreat position")
         end
 
         return best_result
@@ -340,9 +340,9 @@ function best_retreat_position_func(attacking_limit)
             or cutoff and best_result.dist > cutoff then
         if debug_channel("retreat") then
             if best_result.num_blocking > 1 then
-                dsay("Too many monsters blocking retreat")
+                note_decision("RETREAT", "Too many monsters blocking retreat")
             else
-                dsay("Retreat distance is over cutoff of " .. tostring(cutoff))
+                note_decision("RETREAT", "Retreat distance is over cutoff of " .. tostring(cutoff))
             end
         end
 
@@ -399,7 +399,7 @@ function retreat_distance_at(pos)
     local adjusted_threat = enemies.threat - enemies.ranged_threat / 2
     if adjusted_threat < moderate_threat_level() then
         if debug_channel("retreat") then
-            dsay("No retreat position needed for low adjusted threat of "
+            note_decision("RETREAT", "No retreat position needed for low adjusted threat of "
                 .. tostring(adjusted_threat)
                 .. " (total/ranged threat: " .. tostring(enemies.threat)
                 .. "/" .. tostring(enemies.ranged_threat) .. ")")

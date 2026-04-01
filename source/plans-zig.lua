@@ -50,8 +50,8 @@ function plan_use_zigfig()
 
     local figurine = find_item("misc", "figurine of a ziggurat")
     if figurine then
-        say("MAKING ZIG")
-        magic("V" .. item_letter(figurine))
+        note_decision("ZIG", "MAKING ZIG")
+        magic("V" .. item_letter(figurine), "item_use")
         return true
     end
 
@@ -68,7 +68,7 @@ function plan_go_to_zig_dig()
         return false
     end
 
-    magic(control('f') .. portal_entrance_description("Zig") .. "\rayby\r")
+    magic(control('f') .. portal_entrance_description("Zig") .. "\rayby\r", "travel")
     return true
 end
 
@@ -91,9 +91,9 @@ function plan_zig_go_to_stairs()
     end
 
     if c_persist.zig_completed then
-        magic("X<\r")
+        magic("X<\r", "map_search")
     else
-        magic("X>\r")
+        magic("X>\r", "map_search")
     end
     return true
 end

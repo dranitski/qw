@@ -1,8 +1,80 @@
 ------------------
 -- Goal configuration and assessment
 
+-- Approximate difficulty of a branch:depth. Higher = harder.
+-- Based on typical monster danger for each area.
+local branch_base_difficulty = {
+    D = 0, Lair = 3, Orc = 6, Spider = 8, Shoals = 8,
+    Snake = 8, Swamp = 8, Vaults = 10, Elf = 10,
+    Depths = 12, Crypt = 13, Slime = 14, Zot = 16,
+}
+
+-- Find the easiest (lowest difficulty) unexplored level across branches.
+-- Only considers branches that exist and whose entrance has been found.
+-- Returns a single level like "Spider:2" or "Orc:1".
+function easiest_unexplored_level(branches)
+    local best_level, best_diff
+    local has_non_rune = false
+
+    -- First pass: check if any non-rune-floor levels remain
+    for _, br in ipairs(branches) do
+        if branch_exists(br) and branch_found(br) then
+            local max_d = branch_depth(br)
+            for d = 1, max_d do
+                if not explored_level(br, d) then
+                    if d ~= branch_rune_depth(br) then
+                        has_non_rune = true
+                    end
+                    break
+                end
+            end
+        end
+    end
+
+    -- Second pass: score and pick
+    for _, br in ipairs(branches) do
+        if branch_exists(br) and branch_found(br) then
+            local max_d = branch_depth(br)
+            local base = branch_base_difficulty[br] or 10
+            for d = 1, max_d do
+                if not explored_level(br, d) then
+                    local difficulty = base + d
+                    -- Only penalize rune floors when there are easier
+                    -- non-rune options. Otherwise commit to the rune.
+                    if d == branch_rune_depth(br) and has_non_rune then
+                        difficulty = difficulty + 4
+                    end
+                    if not best_diff or difficulty < best_diff then
+                        best_diff = difficulty
+                        best_level = make_level(br, d)
+                    end
+                    break
+                end
+            end
+        end
+    end
+    return best_level
+end
+
 function goal_normal_next(final)
     local goal
+
+    -- If the bot is on a level that needs autoexploring AND that level is
+    -- part of a valid goal range, stick with the current goal. This prevents
+    -- goal cycling where the bot visits a level, goal switches, it leaves
+    -- before autoexplore completes, and keeps bouncing between levels.
+    if not autoexplored_level(where_branch, where_depth)
+            and not in_portal()
+            and not branch_is_temporary(where_branch)
+            and where_branch ~= "Temple" then
+        if where_branch == "D" and where_depth <= 11 then
+            return "D:1-11"
+        elseif where_branch == "Lair" then
+            return "Lair"
+        elseif where_branch == "Orc" then
+            return "Orc"
+        end
+    end
 
     -- Don't try to convert from Ignis too early.
     if explored_level_range("D:1-8")
@@ -39,17 +111,78 @@ function goal_normal_next(final)
 
     if not explored_level_range("D:1-11") then
         -- We head to Lair early, before having explored through D:11, if we
-        -- feel we're ready.
-        if branch_found("Lair")
+        -- feel we're ready.  But if we've been in Lair and are under-leveled
+        -- or lack teleport scrolls, go back to D instead of pushing deeper
+        -- into dangerous Lair floors.
+        local have_tele = find_item("scroll", "teleportation")
+        -- Trigger detour if we're on Lair:4+ or have done Lair:1-3
+        local in_deep_lair = you.branch() == "Lair" and you.depth() >= 4
+        local lair_shallow_done = explored_level_range("Lair:1-3")
+            or in_deep_lair
+        local need_more_xp = lair_shallow_done
+            and (you.xl() < 15 or not have_tele)
+
+        -- Log which D levels are blocking explored_level_range("D:1-11")
+        local blocking = {}
+        for d = 1, 11 do
+            if not explored_level("D", d) then
+                local ae = autoexplored_level("D", d)
+                local up = have_all_stairs("D", d, const.dir.up,
+                    const.explore.reachable)
+                local dn = have_all_stairs("D", d, const.dir.down,
+                    const.explore.reachable)
+                local state = c_persist.autoexplore[make_level("D", d)]
+                table.insert(blocking, "D:" .. d
+                    .. "(ae=" .. bool_string(ae)
+                    .. " up=" .. bool_string(up)
+                    .. " dn=" .. bool_string(dn)
+                    .. " st=" .. tostring(state) .. ")")
+            end
+        end
+        note_decision("GOAL-BLOCK", "D:1-11 blocking: "
+            .. table.concat(blocking, ", ")
+            .. " | Lair=" .. bool_string(branch_found("Lair"))
+            .. " xl=" .. you.xl()
+            .. " tele=" .. bool_string(have_tele))
+
+        -- Don't switch away from Dungeon while we're actively on an
+        -- unexplored D level. This prevents goal cycling where the bot
+        -- enters D:N, goal switches to Lair, bot leaves, comes back,
+        -- goal switches again, wasting thousands of turns.
+        local on_unexplored_d = in_branch("D")
+            and not explored_level(where_branch, where_depth)
+        if need_more_xp or on_unexplored_d then
+            goal = "D:1-11"
+        elseif branch_found("Lair")
                 and not explored_level_range("Lair")
                 and ready_for_lair() then
             goal = "Lair"
+        elseif branch_found("Orc")
+                and not explored_level_range("Orc") then
+            -- Orc:1 (difficulty 7) is easier than D:10+ (difficulty 10+).
+            -- Use easiest_unexplored_level to interleave Orc with late D.
+            goal = easiest_unexplored_level({"D", "Orc"})
+                or "D:1-11"
         else
             goal = "D:1-11"
         end
-    -- D:1-11 explored, but not Lair.
-    elseif not explored_level_range("Lair") then
-        goal = "Lair"
+    -- D:1-11 explored, but not Lair. Only target Lair if the entrance was
+    -- actually found; otherwise skip to deeper Dungeon goals to avoid an
+    -- infinite travel oscillation when the entrance is unreachable.
+    elseif branch_found("Lair") and not explored_level_range("Lair") then
+        -- After clearing some Lair, detour for XP if under-leveled or
+        -- lacking teleport scrolls. Try Orc:1, then D:12, before deep Lair.
+        local have_tele = find_item("scroll", "teleportation")
+        local need_detour = you.xl() < 15 or not have_tele
+        if need_detour then
+            if not explored_level_range("D:12") then
+                goal = "D:12"
+            else
+                goal = "Lair"
+            end
+        else
+            goal = "Lair"
+        end
     -- D:1-11 and Lair explored, but not D:12.
     elseif not explored_level_range("D:12") then
         if qw.late_orc then
@@ -66,16 +199,33 @@ function goal_normal_next(final)
         else
             goal = "D"
         end
-    -- D and Lair explored, but not Orc.
+    -- D and Lair explored, but not Orc or Lair branches.
+    -- Use one-level-at-a-time swapping: pick the easiest unexplored level
+    -- across Orc and both Lair rune branches.
     elseif not explored_level_range("Orc") then
-        goal = "Orc"
+        local candidates = { "Orc" }
+        local first_br = next_branch(lair_branch_order())
+        if first_br then
+            table.insert(candidates, first_br)
+        end
+        local second_br = next_branch(lair_branch_order(), 1)
+        if second_br then
+            table.insert(candidates, second_br)
+        end
+        goal = easiest_unexplored_level(candidates)
+        if not goal then
+            goal = "Orc"
+        end
     end
 
     if goal then
         return goal
     end
 
-    -- At this point we're sure we've found Lair branches.
+    -- D, Lair, and Orc all explored. Sequential progression through
+    -- remaining branches. Use easiest_unexplored_level only for the
+    -- two Lair rune branches (to interleave their non-rune floors).
+
     if not early_first_lair_branch then
         local first_br = next_branch(lair_branch_order())
         early_first_lair_branch = make_level_range(first_br, 1, -1)
@@ -86,45 +236,64 @@ function goal_normal_next(final)
         second_lair_branch_end = branch_end(second_br)
     end
 
-    -- D, Lair, and Orc explored, but no Lair branch.
-    if not explored_level_range(early_first_lair_branch) then
-        goal = early_first_lair_branch
-    -- D, Lair, and Orc explored, levels 1-3 of the first Lair branch.
-    elseif not explored_level_range(early_second_lair_branch) then
-        goal = early_second_lair_branch
-    -- D, Lair, and Orc explored, levels 1-3 of both Lair branches.
-    elseif not explored_level_range(first_lair_branch_end) then
-        goal = first_lair_branch_end
-    -- D, Lair, Orc, and at least one Lair branch explored, but not early
-    -- Vaults.
-    elseif not explored_level_range(early_vaults) then
-        goal = early_vaults
-    -- D, Lair, Orc, one Lair branch, and early Vaults explored, but the
-    -- second Lair branch not fully explored.
-    elseif not explored_level_range(second_lair_branch_end) then
-        if not explored_level_range("Depths")
-                and not qw.early_second_rune then
-            goal = "Depths"
+    -- Interleave non-rune floors of both Lair branches.
+    local first_br = next_branch(lair_branch_order())
+    local second_br = next_branch(lair_branch_order(), 1)
+    -- Pick which Lair branch to explore next based on difficulty.
+    -- Use branch ranges (not individual levels) so the bot fully commits
+    -- to one branch at a time instead of cycling between branches.
+    local lair_next
+    if first_br and not explored_level_range(first_br) then
+        if second_br and not explored_level_range(second_br) then
+            -- Both available: pick the one with the easier next level
+            local candidates = {}
+            table.insert(candidates, first_br)
+            table.insert(candidates, second_br)
+            local pick = easiest_unexplored_level(candidates)
+            if pick then
+                lair_next = parse_level_range(pick)
+            end
         else
-            goal = second_lair_branch_end
+            lair_next = first_br
         end
-    -- D, Lair, Orc, both Lair branches, and early Vaults explored, but not
-    -- Depths.
+    elseif second_br and not explored_level_range(second_br) then
+        lair_next = second_br
+    end
+
+    if lair_next then
+        goal = lair_next
+    -- Both Lair branches explored. Vaults (if we have runes to avoid lock).
+    -- Vaults:1-4 (if we have runes, so no lock-in)
+    elseif you.num_runes() > 0 and not explored_level_range(early_vaults) then
+        goal = early_vaults
+    -- Depths before Vaults:5 and Elf (Depths has better XP/turn)
     elseif not explored_level_range("Depths") then
         goal = "Depths"
-    -- D, Lair, Orc, both Lair branches, early Vaults, and Depths explored,
-    -- but no Vaults rune.
-    elseif not explored_level_range(vaults_end) then
+    -- Elf for XP before Zot (runed doors auto-open on explored levels)
+    elseif branch_found("Elf") and not explored_level_range("Elf") then
+        goal = "Elf"
+    -- No runes and Vaults not started — full commit
+    elseif you.num_runes() == 0 and not explored_level_range("Vaults") then
+        goal = "Vaults"
+    -- Slime rune is easier than Vaults:5 when we have corrosion resistance.
+    -- Slime:1-4 are simple, Slime:5 has Royal Jelly but is manageable.
+    elseif branch_found("Slime") and not explored_level_range("Slime")
+            and you.res_corr() and not have_branch_runes("Slime") then
+        goal = "Slime"
+    -- Vaults:5 only if we still need runes. Skip if we got 3 from Slime.
+    elseif you.num_runes() < 3 and not explored_level_range(vaults_end) then
         goal = vaults_end
-    -- D, Lair, Orc, both Lair branches, Vaults, and Depths explored, and it's
-    -- time to shop.
-    elseif not c_persist.done_shopping then
+    end
+
+    if goal then
+        return goal
+    end
+
+    -- Everything explored. Final goals.
+    if not c_persist.done_shopping then
         goal = "Shopping"
-    -- If we have other goal entries, the Normal plan stops here, otherwise
-    -- early Zot.
     elseif final and not explored_level_range(early_zot) then
         goal = early_zot
-    -- Time to win.
     elseif final then
         goal = "Win"
     end
@@ -270,13 +439,21 @@ end
 function determine_goal()
     permanent_bazaar = nil
     local chosen_goal, normal_goal = choose_goal()
+
+    if debug_channel("goals") then
+        note_decision("GOAL-EVAL", "chosen=" .. tostring(chosen_goal)
+            .. " normal=" .. tostring(normal_goal)
+            .. " where=" .. tostring(where)
+            .. " xl=" .. you.xl()
+            .. " turns=" .. you.turns())
+    end
     local old_status = goal_status
     local status = chosen_goal
     local goal = status
 
     if status == "Save" then
         goal_status = status
-        say("SAVING")
+        note_decision("GOAL", "SAVING")
         return
     end
 
@@ -287,13 +464,66 @@ function determine_goal()
 
     if status == "Quit" then
         goal_status = status
-        say("QUITTING!")
+        note_decision("GOAL", "QUITTING!")
         return
     end
 
     if status == "Normal" then
         status = normal_goal
         goal = normal_goal
+    end
+
+    -- Safety: don't enter very dangerous areas without escape consumables.
+    -- Redirect to easier content or shopping.
+    if goal then
+        local goal_br = parse_level_range(goal)
+        local have_tele = find_item("scroll", "teleportation")
+        local have_heal = find_item("potion", "heal wounds")
+        local too_dangerous = false
+        if goal_br == "Vaults" and goal == vaults_end then
+            too_dangerous = true
+        elseif goal_br == "Depths" and not have_tele and you.xl() < 22 then
+            too_dangerous = true
+        elseif goal_br == "Zot" and (not have_tele or not have_heal)
+                and you.xl() < 24 then
+            too_dangerous = true
+        end
+        if too_dangerous and (not have_tele or not have_heal) then
+            -- Look for something safer to do, or go shopping.
+            if branch_found("Crypt") and not explored_level_range("Crypt") then
+                goal = "Crypt"
+                status = goal
+            elseif you.gold() >= 100 then
+                -- With gold, go shopping to get consumables.
+                c_persist.done_shopping = false
+                status = "Shopping"
+                goal = "Shopping"
+                desc = "emergency shopping (need consumables)"
+            end
+        end
+    end
+
+    -- Override: if heading to deep Lair (4+) without teleport scrolls
+    -- or at low XL, detour to D instead. This catches all cases regardless
+    -- of which goal evaluation path was taken.
+    if goal and goal:find("^Lair") then
+        local lair_br, lair_min = parse_level_range(goal)
+        if lair_br == "Lair" then
+            local have_tele = find_item("scroll", "teleportation")
+            local heading_deep = you.where():find("Lair")
+                and (you.depth() >= 3 or explored_level("Lair", 3))
+            if (you.xl() < 15 or not have_tele) and heading_deep then
+                if not explored_level_range("D:1-11") then
+                    goal = "D:1-11"
+                    status = goal
+                    note_decision("GOAL", "LAIR-OVERRIDE: too dangerous, heading to D instead")
+                elseif not explored_level_range("D:12") then
+                    goal = "D:12"
+                    status = goal
+                    note_decision("GOAL", "LAIR-OVERRIDE: too dangerous, heading to D:12 instead")
+                end
+            end
+        end
     end
 
     -- Once we have the rune for this branch, this goal will be complete.
@@ -387,6 +617,48 @@ function determine_goal()
         goal = zot_end
     end
 
+    -- Re-enable shopping when critically low on consumables with gold
+    -- to spend. The bot may have used all its potions/scrolls but shops
+    -- still have stock. Reset done_shopping so plan_shop fires when the
+    -- bot passes through a shop tile during travel.
+    -- Don't re-enable shopping when we have 3 runes and should head to Zot.
+    if c_persist.done_shopping and you.gold() >= 200
+            and you.num_runes() < 3
+            and not find_item("scroll", "teleportation")
+            and not find_item("potion", "heal wounds") then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "re-enabling, gold=" .. you.gold()
+                .. " no_tele=" .. tostring(not find_item("scroll", "teleportation"))
+                .. " no_heal=" .. tostring(not find_item("potion", "heal wounds")))
+        end
+        c_persist.done_shopping = false
+    end
+
+    -- Aggressive shopping: if we can afford anything on the shopping list,
+    -- go buy it now. The plan_shopping_spree has a stuck counter to bail
+    -- out if travel fails.
+    if status ~= "Shopping" and status ~= "Save" and status ~= "Quit"
+            and not in_portal()
+            and not c_persist.done_shopping
+            and you.num_runes() < 3
+            and can_afford_any_shoplist_item() then
+        if debug_channel("shopping") then
+            local shoplist = items.shopping_list()
+            local list_str = ""
+            if shoplist then
+                for n, entry in ipairs(shoplist) do
+                    list_str = list_str .. "\n  [" .. n .. "] "
+                        .. entry[1] .. " (" .. entry[2] .. "g)"
+                end
+            end
+            note_decision("SHOPPING", "aggressive spree triggered from " .. status
+                .. ", gold=" .. you.gold() .. ", shoplist:" .. list_str)
+        end
+        status = "Shopping"
+        goal = "Shopping"
+        desc = "shopping spree"
+    end
+
     -- Portals remain our goal while we're there.
     if in_portal() then
         status = where_branch
@@ -406,7 +678,7 @@ function determine_goal()
                 desc = status
             end
         end
-        say("PLANNING " .. desc:upper())
+        note_decision("GOAL", "PLANNING " .. desc:upper())
     end
 
     set_goal(status, goal)
@@ -636,6 +908,13 @@ function explored_level(branch, depth)
         return have_branch_runes(branch)
     end
 
+    -- Levels that were force-explored (stuck autoexplore detection) are
+    -- treated as fully explored to prevent the bot from returning to them.
+    local level = make_level(branch, depth)
+    if c_persist.force_explored and c_persist.force_explored[level] then
+        return true
+    end
+
     return autoexplored_level(branch, depth)
         and have_all_stairs(branch, depth, const.dir.down,
             const.explore.reachable)
@@ -850,8 +1129,13 @@ function update_goal()
     update_planning()
     update_goal_travel()
 
+    -- Open runed doors in portals, when travel says to, or when the
+    -- current level is autoexplored but not fully explored (runed doors
+    -- are the only thing blocking progress).
     open_runed_doors = branch_is_temporary(where_branch)
         or goal_travel.open_runed_doors
+        or (autoexplored_level(where_branch, where_depth)
+            and not explored_level(where_branch, where_depth))
 
     -- The branch we're planning to visit can affect equipment decisions.
     if last_goal_branch ~= goal_branch then
@@ -888,11 +1172,21 @@ function next_exploration_depth(branch, min_depth, max_depth)
     local branch_max = branch_depth(branch)
     for d = min_depth, max_depth do
         if not autoexplored_level(branch, d) then
+            note_decision("GOAL-DEPTH", "next_explore: " .. branch .. ":"
+                .. d .. " not-autoexplored state="
+                .. tostring(c_persist.autoexplore[make_level(branch, d)]))
             return d
         elseif not have_all_stairs(branch, d, const.dir.up,
                     const.explore.reachable)
                 or not have_all_stairs(branch, d, const.dir.down,
                     const.explore.reachable) then
+            local up_ok = have_all_stairs(branch, d, const.dir.up,
+                const.explore.reachable)
+            local dn_ok = have_all_stairs(branch, d, const.dir.down,
+                const.explore.reachable)
+            note_decision("GOAL-DEPTH", "next_explore: " .. branch .. ":"
+                .. d .. " missing-stairs up=" .. bool_string(up_ok)
+                .. " down=" .. bool_string(dn_ok))
             return d
         end
     end
@@ -930,12 +1224,13 @@ function set_goal(status, goal)
     end
 
     if debug_channel("goals") then
-        dsay("Goal status: " .. goal_status)
+        note_decision("GOAL", "Goal status: " .. goal_status)
         if goal_branch then
-            dsay("Goal branch: " .. tostring(goal_branch)
+            note_decision("GOAL", "Goal branch: " .. tostring(goal_branch)
                 .. ", depth: " .. tostring(goal_depth))
         end
     end
+
 end
 
 function reset_autoexplore(level)
@@ -943,8 +1238,14 @@ function reset_autoexplore(level)
         return
     end
 
+    -- Don't reset force-explored levels; they were marked because the
+    -- bot was stuck and we need to skip them permanently.
+    if c_persist.force_explored and c_persist.force_explored[level] then
+        return
+    end
+
     if debug_channel("goals") then
-        dsay("Resetting autoexplore of " .. level)
+        note_decision("GOAL", "Resetting autoexplore of " .. level)
     end
 
     c_persist.autoexplore[level] = const.autoexplore.needed

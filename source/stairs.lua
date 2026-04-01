@@ -114,7 +114,7 @@ function update_stone_stairs(branch, depth, dir, num, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating stone " .. (dir == const.dir.up and "up" or "down")
+        note_decision("STAIR", "Updating stone " .. (dir == const.dir.up and "up" or "down")
             .. "stairs " .. num .. " on " .. level
             .. " from " .. stairs_state_string(current) .. " to "
             .. stairs_state_string(state))
@@ -150,7 +150,8 @@ function reset_stone_stairs(branch, depth, dir)
         map_mode_searches_cache[3 - cache_parity][dir_key(dir)] = nil
     end
 
-    if where ~= level then
+    if where ~= level
+            and c_persist.autoexplore[level] ~= const.autoexplore.full then
         reset_autoexplore(level)
     end
 end
@@ -271,7 +272,7 @@ function update_branch_stairs(branch, depth, dest_branch, dir, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating " .. dest_branch .. " branch "
+        note_decision("STAIR", "Updating " .. dest_branch .. " branch "
             .. (dir == const.dir.up and "exit" or "entrance") .. " stairs "
             .. " on " .. level .. " from " .. stairs_state_string(current)
             .. " to " .. stairs_state_string(state))
@@ -343,7 +344,7 @@ function update_escape_hatch(branch, depth, dir, hash, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating escape hatch " .. " on " .. level .. " at "
+        note_decision("STAIR", "Updating escape hatch " .. " on " .. level .. " at "
             .. cell_string_from_map_position(unhash_position(hash))
             .. " from " .. stairs_state_string(current) .. " to "
             .. stairs_state_string(state))
@@ -396,7 +397,7 @@ function update_pan_transit(hash, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating Pan transit at "
+        note_decision("STAIR", "Updating Pan transit at "
             .. los_pos_string(unhash_position(hash)) .. " from "
             .. stairs_state_string(current) .. " to "
             .. stairs_state_string(state))
@@ -442,7 +443,7 @@ function update_abyssal_stairs(hash, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating Abyssal stairs at "
+        note_decision("STAIR", "Updating Abyssal stairs at "
             .. los_pos_string(unhash_position(hash)) .. " from "
             .. stairs_state_string(current) .. " to "
             .. stairs_state_string(state))

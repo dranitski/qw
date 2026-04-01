@@ -4,14 +4,15 @@
 function initialize_debug()
     qw.debug_mode = DEBUG_MODE
     qw.debug_channels = {}
-    for _, channel in ipairs(DEBUG_CHANNELS) do
+    for _, channel in ipairs(DEBUG_CHANNELS or {}) do
         qw.debug_channels[channel] = true
     end
+    initialize_decision_log()
 end
 
 function toggle_debug()
     qw.debug_mode = not qw.debug_mode
-    dsay((qw.debug_mode and "Enabling" or "Disabling") .. " debug mode")
+    note_decision("DEBUG", (qw.debug_mode and "Enabling" or "Disabling") .. " debug mode")
 end
 
 function debug_channel(channel)
@@ -20,42 +21,240 @@ end
 
 function toggle_debug_channel(channel)
     qw.debug_channels[channel] = not qw.debug_channels[channel]
-    dsay((qw.debug_channels[channel] and "Enabling " or "Disabling ")
+    note_decision("DEBUG", (qw.debug_channels[channel] and "Enabling " or "Disabling ")
       .. channel .. " debug channel")
 end
 
 function disable_all_debug_channels()
-    dsay("Disabling all debug channels")
+    note_decision("DEBUG", "Disabling all debug channels")
     qw.debug_channels = {}
 end
 
-function dsay(x, do_note)
-    -- Convert x to string to make debugging easier. We don't do this for say()
-    -- and note() so we can catch errors.
-    local str
-    if type(x) == "table" then
-        str = qw.stringify_table(x)
-    else
-        str = qw.stringify(x)
+local DECISION_LOG_PATH = nil
+local DECISION_LOG_FILE = nil
+
+local function get_decision_log_path()
+    if not DECISION_LOG_PATH then
+        local name = you.name() or "qw"
+        -- Use DECISION_LOG_DIR if set (e.g. by debug-seed.py), else /tmp.
+        local dir = qw.decision_log_dir or "/tmp"
+        DECISION_LOG_PATH = dir .. "/qw_decisions_" .. name .. ".log"
     end
+    return DECISION_LOG_PATH
+end
 
-    str = you.turns() .. " ||| " .. str
-    crawl.mpr(str)
+local function get_decision_log_file()
+    if not DECISION_LOG_FILE then
+        DECISION_LOG_FILE = io.open(get_decision_log_path(), "a")
+    end
+    return DECISION_LOG_FILE
+end
 
-    if do_note then
-        note(str)
+function flush_decision_log()
+    if DECISION_LOG_FILE then
+        DECISION_LOG_FILE:flush()
     end
 end
 
-function test_radius_iter()
-    dsay("Testing 3, 3 with radius 1")
-    for pos in radius_iter({ x = 3, y = 3 }, 1) do
-        dsay("x: " .. tostring(pos.x) .. ", y: " .. tostring(pos.y))
+function close_decision_log()
+    if DECISION_LOG_FILE then
+        DECISION_LOG_FILE:close()
+        DECISION_LOG_FILE = nil
+    end
+end
+
+function initialize_decision_log()
+    if not io or not qw.debug_mode then
+        return
+    end
+    local path = get_decision_log_path()
+    -- Append if the log already exists (preserves across save/restore cycles),
+    -- otherwise create with a header.
+    local exists = io.open(path, "r")
+    if exists then
+        exists:close()
+        local f = get_decision_log_file()
+        if f then
+            local timestamp = os and os.date() or "unknown"
+            f:write("--- Session resumed at " .. timestamp .. " ---\n")
+        end
+    else
+        -- Create with header, then keep open via get_decision_log_file
+        local f = io.open(path, "w")
+        if f then
+            local timestamp = os and os.date() or "unknown"
+            f:write("QW Decision Log — " .. timestamp .. "\n")
+            f:close()
+        end
+        -- Reopen in append mode as the persistent handle
+        get_decision_log_file()
+    end
+end
+
+function note_decision(category, message)
+    if not io or not qw.debug_mode then
+        return
+    end
+    local hp, mhp = you.hp()
+    local pct = math.floor(100 * hp / mhp)
+    local line = you.turns() .. " ||| QW " .. category
+        .. " [HP:" .. hp .. "/" .. mhp .. " " .. pct .. "%]: " .. message
+    local f = get_decision_log_file()
+    if f then
+        f:write(line .. "\n")
+    end
+end
+
+function build_level_map_lines(use_grid)
+    if not io or not qw.debug_mode then
+        return
     end
 
-    dsay("Testing const.origin with radius 3")
+    local feat_fn = use_grid and view.grid_feature_at or view.feature_at
+
+    local min_x, max_x, min_y, max_y = const.gxm, -const.gxm, const.gxm, -const.gxm
+    for x = -const.gxm, const.gxm do
+        for y = -const.gxm, const.gxm do
+            local feat = feat_fn(x, y)
+            if feat and feat ~= "unseen" and feat ~= "rock_wall" then
+                if x < min_x then min_x = x end
+                if x > max_x then max_x = x end
+                if y < min_y then min_y = y end
+                if y > max_y then max_y = y end
+            end
+        end
+    end
+
+    if min_x > max_x then
+        return nil
+    end
+
+    local feat_char = {
+        floor = ".",
+        rock_wall = "#",
+        stone_wall = "#",
+        metal_wall = "#",
+        crystal_wall = "#",
+        closed_door = "+",
+        closed_clear_door = "+",
+        runed_door = "+",
+        runed_clear_door = "+",
+        open_door = "'",
+        open_clear_door = "'",
+        shallow_water = "~",
+        deep_water = "W",
+        lava = "L",
+        enter_shop = "$",
+        altar = "_",
+        transporter = "^",
+        escape_hatch_up = "<",
+        escape_hatch_down = ">",
+    }
+
+    local lines = {}
+    for y = min_y, max_y do
+        local row = {}
+        for x = min_x, max_x do
+            local feat = feat_fn(x, y)
+            if x == 0 and y == 0 then
+                table.insert(row, "@")
+            elseif not feat or feat == "unseen" then
+                table.insert(row, " ")
+            elseif feat:find("stone_stairs_up") then
+                table.insert(row, "<")
+            elseif feat:find("stone_stairs_down") then
+                table.insert(row, ">")
+            elseif feat:find("exit_") then
+                table.insert(row, "E")
+            elseif feat:find("enter_") then
+                table.insert(row, "P")
+            elseif feat:find("altar_") then
+                table.insert(row, "_")
+            elseif feat_char[feat] then
+                table.insert(row, feat_char[feat])
+            elseif feat:find("wall") then
+                table.insert(row, "#")
+            elseif feat:find("door") then
+                table.insert(row, "+")
+            elseif feat:find("trap") then
+                table.insert(row, "^")
+            else
+                table.insert(row, "?")
+            end
+        end
+        table.insert(lines, table.concat(row))
+    end
+
+    return lines, where
+end
+
+function dump_level_map_to_file(prefix)
+    if not io or not qw.debug_mode then
+        return
+    end
+
+    local use_grid = view.grid_feature_at ~= nil
+    local lines, level = build_level_map_lines(use_grid)
+    if not lines then
+        return
+    end
+
+    local safe_level = level:gsub(":", "-"):gsub(" ", "_")
+    local dir = qw.decision_log_dir or "/tmp"
+    local path = dir .. "/" .. (prefix or "map") .. "-" .. safe_level .. ".txt"
+    local f = io.open(path, "w")
+    if f then
+        f:write("Level: " .. level .. "  Turn: " .. you.turns()
+            .. "  XL: " .. you.xl()
+            .. (use_grid and "  (full grid)" or "  (player knowledge)") .. "\n")
+        f:write("Player at @\n\n")
+        for _, line in ipairs(lines) do
+            f:write(line .. "\n")
+        end
+        f:close()
+    end
+end
+
+function dump_stats()
+    if not io or not qw.stats then
+        return
+    end
+    local dir = qw.decision_log_dir or "/tmp"
+    local path = dir .. "/qw_stats.txt"
+    local f = io.open(path, "w")
+    if not f then
+        return
+    end
+    for k, v in pairs(qw.stats) do
+        f:write(k .. "=" .. tostring(v) .. "\n")
+    end
+    f:close()
+    close_decision_log()
+end
+
+function write_reason(reason, detail)
+    local dir = qw.decision_log_dir or "/tmp"
+    local path = dir .. "/reason.txt"
+    local f = io.open(path, "w")
+    if not f then
+        return
+    end
+    f:write(reason .. "\n")
+    if detail then
+        f:write(detail .. "\n")
+    end
+    f:close()
+end
+
+function test_radius_iter()
+    note_decision("DEBUG", "Testing 3, 3 with radius 1")
+    for pos in radius_iter({ x = 3, y = 3 }, 1) do
+        note_decision("DEBUG", "x: " .. tostring(pos.x) .. ", y: " .. tostring(pos.y))
+    end
+
+    note_decision("DEBUG", "Testing const.origin with radius 3")
     for pos in radius_iter(const.origin, 3) do
-        dsay("x: " .. tostring(pos.x) .. ", y: " .. tostring(pos.y))
+        note_decision("DEBUG", "x: " .. tostring(pos.x) .. ", y: " .. tostring(pos.y))
     end
 end
 
@@ -67,7 +266,7 @@ function print_traversal_map(center)
     crawl.setopt("msg_condense_repeats = false")
 
     local map_center = position_sum(qw.map_pos, center)
-    say("Traversal map at " .. cell_string_from_map_position(map_center))
+    note_decision("MAP", "Traversal map at " .. cell_string_from_map_position(map_center))
     -- This needs to iterate by row then column for display purposes.
     for y = -20, 20 do
         local str = ""
@@ -93,7 +292,7 @@ function print_traversal_map(center)
                 str = str .. (traversable and "." or "#")
             end
         end
-        say(str)
+        note_decision("MAP", str)
     end
 
     crawl.setopt("msg_condense_repeats = true")
@@ -107,7 +306,7 @@ function print_unexcluded_map(center)
     crawl.setopt("msg_condense_repeats = false")
 
     local map_center = position_sum(qw.map_pos, center)
-    say("Unexcluded map at " .. cell_string_from_map_position(map_center))
+    note_decision("MAP", "Unexcluded map at " .. cell_string_from_map_position(map_center))
     -- This needs to iterate by row then column for display purposes.
     for y = -20, 20 do
         local str = ""
@@ -133,7 +332,7 @@ function print_unexcluded_map(center)
                 str = str .. (unexcluded and "." or "#")
             end
         end
-        say(str)
+        note_decision("MAP", str)
     end
 
     crawl.setopt("msg_condense_repeats = true")
@@ -147,7 +346,7 @@ function print_adjacent_floor_map(center)
     crawl.setopt("msg_condense_repeats = false")
 
     local map_center = position_sum(qw.map_pos, center)
-    say("Adjacent floor map at " .. cell_string_from_map_position(map_center))
+    note_decision("MAP", "Adjacent floor map at " .. cell_string_from_map_position(map_center))
     -- This needs to iterate by row then column for display purposes.
     for y = -20, 20 do
         local str = ""
@@ -173,7 +372,7 @@ function print_adjacent_floor_map(center)
                 str = str .. floor_count
             end
         end
-        say(str)
+        note_decision("MAP", str)
     end
 
     crawl.setopt("msg_condense_repeats = true")
@@ -188,7 +387,7 @@ function print_distance_map(dist_map, center, excluded)
 
     local map = excluded and dist_map.excluded_map or dist_map.map
     local map_center = position_sum(qw.map_pos, center)
-    say("Distance map at " .. cell_string_from_map_position(dist_map.pos)
+    note_decision("MAP", "Distance map at " .. cell_string_from_map_position(dist_map.pos)
         .. " from position " .. cell_string_from_map_position(map_center))
     -- This needs to iterate by row then column for display purposes.
     for y = -20, 20 do
@@ -220,7 +419,7 @@ function print_distance_map(dist_map, center, excluded)
                 end
             end
         end
-        say(str)
+        note_decision("MAP", str)
     end
 
     crawl.setopt("msg_condense_repeats = true")
@@ -240,7 +439,7 @@ function set_counter()
     crawl.formatted_mpr("Set game counter to what? ", "prompt")
     local res = crawl.c_input_line()
     c_persist.record.counter = tonumber(res)
-    note("Game counter set to " .. c_persist.record.counter)
+    note_decision("COUNTER", "Game counter set to " .. c_persist.record.counter)
 end
 
 function override_goal(goal)
@@ -296,13 +495,13 @@ end
 
 function toggle_throttle()
     qw.coroutine_throttle = not qw.coroutine_throttle
-    dsay((qw.coroutine_throttle and "Enabling" or "Disabling")
+    note_decision("DEBUG", (qw.coroutine_throttle and "Enabling" or "Disabling")
       .. " coroutine throttle")
 end
 
 function toggle_delay()
     qw.delayed = not qw.delayed
-    dsay((qw.delayed and "Enabling" or "Disabling") .. " action delay")
+    note_decision("DEBUG", (qw.delayed and "Enabling" or "Disabling") .. " action delay")
 end
 
 function reset_coroutine()
@@ -316,7 +515,7 @@ end
 
 function toggle_single_step()
     qw.single_step = not qw.single_step
-    dsay((qw.single_step and "Enabling" or "Disabling")
+    note_decision("DEBUG", (qw.single_step and "Enabling" or "Disabling")
       .. " single action steps.")
 end
 

@@ -77,7 +77,7 @@ function plan_starting_spell()
         return false
     end
 
-    say("CASTING " .. qw.starting_spell)
+    note_decision("SPELL", "CASTING " .. qw.starting_spell)
     if spells.range(qw.starting_spell) > 0 then
         magic("z" .. spells.letter(qw.starting_spell) .. "f")
     else

@@ -2,17 +2,18 @@
 -- Stair-related plans
 
 function go_upstairs(confirm)
-    magic("<" .. (confirm and "Y" or ""))
+    magic("<" .. (confirm and "Y" or ""), "stairs")
 end
 
 function go_downstairs(confirm)
-    magic(">" .. (confirm and "Y" or ""))
+    magic(">" .. (confirm and "Y" or ""), "stairs")
 end
 
 function plan_go_to_unexplored_stairs()
     if unable_to_travel()
             or goal_travel.want_go
-            or not goal_travel.stairs_dir then
+            or not goal_travel.stairs_dir
+ then
         return false
     end
 
@@ -42,13 +43,26 @@ function plan_go_to_unexplored_stairs()
     map_mode_search_hash = hash
     map_mode_search_count = count
     map_mode_search_attempts = 1
-    magic("X" .. key:rep(count) .. "\r")
+    magic("X" .. key:rep(count) .. "\r", "map_search")
+    return true
 end
 
 function plan_go_to_transporter()
     if unable_to_travel()
             or not want_to_use_transporters()
             or transp_search then
+        qw.transp_search_fails = 0
+        return false
+    end
+
+    -- If transporter map search has been failing, stop trying so
+    -- plan_go_to_portal_exit can run instead. The counter persists
+    -- across turns (not reset by action_fails) because random_step
+    -- advances the turn but doesn't fix the transporter search.
+    if not qw.transp_search_fails then
+        qw.transp_search_fails = 0
+    end
+    if qw.transp_search_fails > 5 then
         return false
     end
 
@@ -77,7 +91,8 @@ function plan_go_to_transporter()
 
     transp_search_zone = transp_zone
     transp_search_count = search_count
-    magic("X" .. (">"):rep(search_count) .. "\r")
+    qw.transp_search_fails = qw.transp_search_fails + 1
+    magic("X" .. (">"):rep(search_count) .. "\r", "map_search")
     return true
 end
 
@@ -86,7 +101,7 @@ function plan_transporter_orient_exit()
         return false
     end
 
-    magic("X<\r")
+    magic("X<\r", "map_search")
     return true
 end
 
@@ -101,12 +116,13 @@ function plan_enter_transporter()
         return false
     end
 
-    magic(">")
+    magic(">", "stairs")
     return true
 end
 
 function plan_take_unexplored_stairs()
-    if not goal_travel.stairs_dir or unable_to_use_stairs() then
+    if not goal_travel.stairs_dir or unable_to_use_stairs()
+ then
         return false
     end
 
@@ -121,10 +137,14 @@ function plan_take_unexplored_stairs()
         return false
     end
 
-    -- Ensure that we autoexplore any new area we arrive in, otherwise, if we
-    -- have completed autoexplore at least once, we may immediately leave once
-    -- we see we've found the last missing staircase.
-    reset_autoexplore(make_level(where_branch, where_depth + dir))
+    -- Ensure that we autoexplore any new area we arrive in, but only if the
+    -- level hasn't been fully explored yet. Resetting a full level causes
+    -- autoexplore to immediately say "Done exploring" without advancing a
+    -- turn.
+    local dest_level = make_level(where_branch, where_depth + dir)
+    if c_persist.autoexplore[dest_level] ~= const.autoexplore.full then
+        reset_autoexplore(dest_level)
+    end
 
     if dir == const.dir.up then
         go_upstairs()
@@ -154,7 +174,7 @@ function plan_unexplored_stairs_backtrack()
 end
 
 function plan_go_to_upstairs()
-    magic("X<\r")
+    magic("X<\r", "map_search")
     return true
 end
 
@@ -231,7 +251,8 @@ function plan_stairdance_up()
         return false
     end
 
-    say("STAIRDANCE")
+    qw.stats.stairdances = qw.stats.stairdances + 1
+    note_decision("STAIR", "STAIRDANCE")
     go_upstairs(you.status("spiked"))
     return true
 end
@@ -315,8 +336,84 @@ function plan_teleport_dangerous_stairs()
     return teleport()
 end
 
+-- Check if the next level down from the current level has recorded high
+-- threat at any of its upstairs. Returns the maximum threat value, or 0.
+function next_level_stair_threat()
+    local dest_depth = where_depth + 1
+    if dest_depth > branch_depth(where_branch) then
+        return 0
+    end
+
+    local max_threat = 0
+    local n = num_required_stairs(where_branch, dest_depth, const.dir.up)
+    for i = 1, n do
+        local num = ("i"):rep(i)
+        local state = get_stone_stairs(where_branch, dest_depth,
+            const.dir.up, num)
+        if state and state.threat and state.threat > max_threat then
+            max_threat = state.threat
+        end
+    end
+    return max_threat
+end
+
+-- At low XL, berserk before descending stairs that have recorded high
+-- threat. This prevents the cycle where the bot flees from a dangerous
+-- enemy, returns via the goal system, and gets one-shot on arrival.
+-- Berserking before descending gives +50% HP to absorb the stair-ambush
+-- hit and enough damage to finish the fight.
+-- Only triggers once per destination level to avoid berserk spam.
+function plan_berserk_dangerous_stairs()
+    if you.berserk() or you.xl() >= 7 then
+        return false
+    end
+
+    if not goal_travel.want_go then
+        return false
+    end
+
+    -- Only when about to go one level deeper.
+    if not goal_travel.branch
+            or goal_travel.branch ~= where_branch
+            or goal_travel.depth ~= where_depth + 1 then
+        return false
+    end
+
+    local dest = make_level(goal_travel.branch, goal_travel.depth)
+    if qw.preberserk_levels and qw.preberserk_levels[dest] then
+        return false
+    end
+
+    local threat = next_level_stair_threat()
+    if threat < high_threat_level() then
+        return false
+    end
+
+    if can_berserk() then
+        note_decision("STAIR", "PRE-STAIRS BERSERK (threat=" .. threat .. ")")
+        if not qw.preberserk_levels then
+            qw.preberserk_levels = {}
+        end
+        qw.preberserk_levels[dest] = true
+        return use_ability("Berserk")
+    end
+
+    -- If we can't berserk, at least use Trog's Hand for the regen buffer.
+    if can_trogs_hand() and not you.regenerating() then
+        note_decision("STAIR", "PRE-STAIRS TROG'S HAND (threat=" .. threat .. ")")
+        if not qw.preberserk_levels then
+            qw.preberserk_levels = {}
+        end
+        qw.preberserk_levels[dest] = true
+        return use_ability("Trog's Hand")
+    end
+
+    return false
+end
+
 function plan_use_travel_stairs()
-    if unable_to_use_stairs() or dangerous_to_move() then
+    if unable_to_use_stairs() or dangerous_to_move()
+ then
         return false
     end
 

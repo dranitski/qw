@@ -1,0 +1,393 @@
+
+======================================================================
+QW BATCH ANALYSIS — 300 games — /home/agent/repos/qw/debug-seed-runs
+======================================================================
+
+OUTCOMES
+  DEATH     263  (88%)
+  QUIT       37  (12%)
+
+CORE METRICS
+  Score                     mean= 14863.4  median=  2203.0  p90= 31483.0  best=192475.0  total=   4459028
+  XL                        mean=     8.2  median=     9.0  p90=    13.0  best=    18.0  total=      2453
+  Turns                     mean=  8389.2  median=  5727.0  p90= 23604.0  best= 30000.0  total=   2516763
+  Time (s)                  mean=    24.3  median=     8.0  p90=    61.0  best=   584.0  total=      7281
+  Turns/sec                 mean=   653.1  median=   630.0  p90=  1018.5  best=  1832.0  total=  178946.1
+  Kills                     mean=   194.5  median=   141.0  p90=   417.0  best=  1012.0  total=     57767
+  Runes                     mean=     0.0  median=     0.0  p90=     0.0  best=     0.0  total=         0
+  Gold collected            mean=   575.5  median=   397.0  p90=  1352.0  best=  3467.0  total=    164007
+  Gold spent                mean=   492.3  median=   299.0  p90=  1478.0  best=  2362.0  total=     73355
+  Zot damage                mean=     0.0  median=     0.0  p90=     0.0  best=     1.0  total=         2
+
+BRANCH REACH (% of games)
+  D             300  (100.0%)  deepest=15
+  Lair           75  ( 25.0%)  deepest=5
+  Orc            54  ( 18.0%)  deepest=2
+  Swamp           6  (  2.0%)  deepest=4
+  Spider          5  (  1.7%)  deepest=3
+  Snake           5  (  1.7%)  deepest=4
+  Abyss           4  (  1.3%)  deepest=2
+  Shoals          3  (  1.0%)  deepest=3
+
+TURNS PER BRANCH (mean, across games that visited)
+  D            mean= 6184.7  total= 1855407  games=300
+  Lair         mean= 4354.2  total=  326563  games=75
+  Orc          mean= 4222.7  total=  228025  games=54
+  Gauntlet     mean= 1502.8  total=   18033  games=12
+  Sewer        mean=  639.6  total=   17908  games=28
+  Snake        mean= 3556.6  total=   17783  games=5
+  Spider       mean= 3267.8  total=   16339  games=5
+  Swamp        mean= 2440.5  total=   14643  games=6
+  Ossuary      mean=  542.5  total=   10307  games=19
+  Shoals       mean= 2640.7  total=    7922  games=3
+  Bazaar       mean=  788.3  total=    2365  games=3
+  Abyss        mean=  367.0  total=    1468  games=4
+
+TOP KILLERS
+    27  ( 9.0%)  a gnoll
+    11  ( 3.7%)  an ogre
+    10  ( 3.3%)  Sigmund
+     8  ( 2.7%)  a wight
+     8  ( 2.7%)  divine providence
+     7  ( 2.3%)  a ball python
+     7  ( 2.3%)  a centaur
+     7  ( 2.3%)  a two-headed ogre
+     7  ( 2.3%)  an orc warrior
+     5  ( 1.7%)  a kobold blastminer
+     5  ( 1.7%)  an ettin
+     4  ( 1.3%)  a gnoll sergeant
+     4  ( 1.3%)  a hobgoblin
+     4  ( 1.3%)  a troll
+     4  ( 1.3%)  an orc wizard
+
+DEATH LOCATIONS
+    31  Dungeon:2
+    27  Dungeon:3
+    24  Dungeon:4
+    22  Dungeon:1
+    21  Dungeon:5
+    21  Dungeon:8
+    18  Orcish Mines:2
+    15  Dungeon:9
+    14  Dungeon:7
+    14  Dungeon:6
+     9  Dungeon:10
+     7  Dungeon:12
+     6  Lair of Beasts:2
+     6  Lair of Beasts:1
+     5  Orcish Mines:1
+
+QW BOT METRICS (per game, from qw_stats.txt)
+  Stuck turns               mean=    76.0  median=     0.0  p90=    61.0  best=  1359.0  total=     22797
+  Flees                     mean=    48.8  median=    28.0  p90=   117.0  best=   383.0  total=     14637
+  Teleports                 mean=     2.0  median=     1.0  p90=     6.0  best=    13.0  total=       609
+  Berserks                  mean=     2.1  median=     1.0  p90=     5.0  best=    14.0  total=       619
+  Heals                     mean=     3.8  median=     3.0  p90=    10.0  best=    25.0  total=      1136
+  Stairdances               mean=     4.7  median=     2.0  p90=    12.0  best=    48.0  total=      1399
+  Purchases                 mean=     2.3  median=     0.0  p90=     6.0  best=    24.0  total=       696
+  Explore stuck             mean=     0.0  median=     0.0  p90=     0.0  best=     2.0  total=        12
+
+PER-GAME RESULTS (sorted by score)
+   Seed Outcome   Score  XL   Turns  Time    T/s Kills Runes  Gold  Zot     Location Killer
+  ───── ─────── ─────── ─── ─────── ───── ────── ───── ───── ───── ──── ──────────── ──────────────────────────────
+      5    QUIT  192475  18   30000    97  309.3  1012     0  2198       Snake Pit:4 (quit)
+    114    QUIT  184842  17   30000    77  389.6   922     0  1885          Shoals:3 (quit)
+    133    QUIT  179294  17   30000   143  209.8   969     0  2277          Shoals:2 (quit)
+     58    QUIT  171176  17   30000   118  254.2   904     0  2294           Swamp:4 (quit)
+     83    QUIT  167701  17   30000    93  322.6   873     0  1980      Spider Nest:3 (quit)
+     23    QUIT  163730  17   30000    75  400.0   944     0  2108      Spider Nest:2 (quit)
+    182   DEATH  162472  17   25180    90  279.8   900     0  1794      Spider Nest:3 
+    129    QUIT  155388  17   30000   165  181.8   762     0  1911           Swamp:3 (quit)
+    127   DEATH  150423  16   28820    64  450.3   788     0  1668       Snake Pit:2 a naga sharpshooter
+     50   DEATH  102031  15   26080    81  322.0   819     0  1949       Snake Pit:1 a salamander
+    292   DEATH   98284  15   22270    66  337.4   632     0  1564      Orcish Mines:2 an orc knight
+    282   DEATH   95311  15   25898    52  498.0   669     0   518      Orcish Mines:2 a kobold blastminer
+    146   DEATH   94971  15   25829    94  274.8   653     0  1828      Orcish Mines:2 an orc knight
+    142   DEATH   85745  15   22316    48  464.9   579     0   339        Dungeon:15 a laughing skull
+     34    QUIT   79828  15   24100    74  325.7   559     0  2362                 ? (quit)
+    293   DEATH   79454  15   22121    53  417.4   587     0  1190        Dungeon:15 a fire giant
+    123   DEATH   73504  15   27489    48  572.7   639     0              Dungeon:14 a freezing wraith
+    202   DEATH   70781  14   22148    45  492.2   524     0              Dungeon:14 an ettin
+    288   DEATH   70676  14   20874    39  535.2   557     0   664        Dungeon:13 a fire elemental
+    180   DEATH   67014  14   20640    39  529.2   499     0  1095        Dungeon:15 a fire elemental
+    284   DEATH   66366  14   20098    48  418.7   556     0  1546        Dungeon:14 Roxanne
+    108   DEATH   63478  14   22077    68  324.7   562     0  1014      Lair of Beasts:5 
+    148   DEATH   54935  14   21798    50  436.0   535     0  1182      Lair of Beasts:5 an oklob plant
+    134    QUIT   54900  14   18500    59  313.6   494     0                       ? (quit)
+    227   DEATH   52429  14   18581    36  516.1   492     0   847      Lair of Beasts:5 a cane toad
+     73   DEATH   43829  13   23604    36  655.7   442     0   272      Lair of Beasts:3 Rupert
+     82   DEATH   42979  13   19610    54  363.1   461     0  1258        Dungeon:12 Jorgrun
+     53   DEATH   36333  13   12968    33  393.0   392     0  1074        Dungeon:12 Rupert
+    240   DEATH   32810  13   15990    30  533.0   353     0   364      Lair of Beasts:3 
+    149   DEATH   31483  13   11635    27  430.9   334     0   855           Abyss:2 a blizzard demon
+    253    QUIT   28852  13   30000   107  280.4   315     0  1060        Dungeon:10 (quit)
+    273    QUIT   27989  13   30000   152  197.4   437     0              Dungeon:10 (quit)
+     31    QUIT   27955  13   15700    45  348.9   417     0   679                 ? (quit)
+     46    QUIT   27949  13   30000    80  375.0   418     0   310      Lair of Beasts:1 (quit)
+    252   DEATH   27929  13   13921    33  421.8   403     0   260      Orcish Mines:2 an orc warlord
+    179    QUIT   26701  13   13300    46  289.1   332     0   420                 ? (quit)
+    294    QUIT   26553  12   30000    89  337.1   349     0   584      Lair of Beasts:1 (quit)
+    267   DEATH   26289  12   10896    23  473.7   283     0   412        Dungeon:10 a boulder beetle
+    234    QUIT   26201  12   30000   121  247.9   390     0   110      Lair of Beasts:1 (quit)
+    154   DEATH   26060  12   11787    22  535.8   287     0              Dungeon:11 Lodul
+    172   DEATH   25644  12   15041    34  442.4   337     0   904      Lair of Beasts:3 Nessos
+    135   DEATH   25314  12   16963    31  547.2   331     0   340        Dungeon:12 a fire dragon
+     15   DEATH   25147  12   12430    33  376.7   376     0   851      Orcish Mines:2 a centaur
+    126    QUIT   24906  12   13543    38  356.4   359     0   126                 ? (quit)
+     30   DEATH   24487  12   18599    37  502.7   301     0   560        Dungeon:11 
+    143    QUIT   24006  12   30000   154  194.8   348     0   715         Dungeon:9 (quit)
+    156    QUIT   23601  12   30000   144  208.3   341     0   344      Lair of Beasts:2 (quit)
+    197   DEATH   23527  12   13090    25  523.6   280     0              Dungeon:12 a red devil
+    291    QUIT   23261  12   10800    28  385.7   295     0    74                 ? (quit)
+    106   DEATH   22673  12   15380    45  341.8   379     0  1478                 ? a minotaur
+    181    QUIT   22218  12   13300    43  309.3   353     0                       ? (quit)
+     72   DEATH   21868  12   12761    25  510.4   275     0   436        Dungeon:11 a deep elf zephyrmancer
+      9    QUIT   21862  12   12300    34  361.8   284     0    78                 ? (quit)
+    161    QUIT   21763  12   30000   180  166.7   366     0   820         Dungeon:8 (quit)
+    212   DEATH   21739  12    9831    17  578.3   273     0   307        Dungeon:10 Amaemon
+    223   DEATH   21678  12   12727    25  509.1   324     0   375      Orcish Mines:2 a kobold blastminer
+    189    QUIT   21224  12   30000   128  234.4   314     0            Lair of Beasts:1 (quit)
+    107   DEATH   20386  12   11740    23  510.4   286     0            Orcish Mines:1 an ettin
+    255    QUIT   20033  12   30000   136  220.6   400     0   105      Lair of Beasts:1 (quit)
+     91    QUIT   19586  12   30000   132  227.3   220     0              Dungeon:10 (quit)
+    198   DEATH   19356  12   15487    35  442.5   329     0            Lair of Beasts:2 an electric eel
+      3   DEATH   19298  12   10159    29  350.3   348     0   210      Orcish Mines:2 a two-headed ogre
+     36    QUIT   19201  12   14300    61  234.4   262     0   557      Orcish Mines:1 (quit)
+    226   DEATH   19147  12   11140    22  506.4   309     0   210      Orcish Mines:2 an orc warrior
+     32    QUIT   18968  12   30000   205  146.3   302     0   476         Dungeon:9 (quit)
+     24   DEATH   18385  12   14093    24  587.2   265     0   334      Lair of Beasts:2 a 14-headed hydra
+    222    QUIT   17933  12   10100    37  273.0   297     0                       ? (quit)
+    206   DEATH   17782  12   11706    21  557.4   270     0   457        Dungeon:12 Jorgrun
+    249    QUIT   17742  12   30000   135  222.2   276     0   227      Lair of Beasts:1 (quit)
+    257   DEATH   17546  12   11921    25  476.8   279     0   329      Orcish Mines:2 an iron troll
+      7   DEATH   17177  12   10367    19  545.6   329     0   436      Lair of Beasts:1 a death yak
+     10   DEATH   15937  12   10696    18  594.2   295     0   552        Dungeon:12 an enormous slime creature
+    195    QUIT   15797  12   10200    36  283.3   220     0   514                 ? (quit)
+    289   DEATH   13844  11    7560    12  630.0   195     0   390      Lair of Beasts:1 an oklob plant
+    256   DEATH   13755  11   12012    18  667.3   265     0   355        Dungeon:12 a skeletal warrior
+     48   DEATH   13684  11   12122    19  638.0   282     0              Dungeon:10 an ettin
+    171   DEATH   13577  11   11252    19  592.2   239     0    54      Orcish Mines:2 an orc warrior
+    140   DEATH   13524  11   10391    18  577.3   217     0   430      Lair of Beasts:2 Gastronok
+    230   DEATH   13131  11   12783    22  581.0   277     0   357      Orcish Mines:1 an orc warlord
+     17   DEATH   12517  11   10716    26  412.2   261     0   729      Orcish Mines:2 a kobold blastminer
+    184   DEATH   12311  11    9485    17  557.9   243     0            Lair of Beasts:2 a wolf
+    238   DEATH   11934  11    8279    15  551.9   239     0   324      Lair of Beasts:2 a blink frog
+    177   DEATH   11431  11   12255    21  583.6   251     0   571      Lair of Beasts:1 an eight-headed hydra
+     81   DEATH   10927  11   10128    19  533.1   267     0   330      Lair of Beasts:2 a blink frog
+     14   DEATH   10793  11   10413    18  578.5   277     0   545         Dungeon:9 Harold
+     97   DEATH    9988  11    9822    15  654.8   235     0              Dungeon:10 a skeletal warrior
+    269   DEATH    9391  11    9267    16  579.2   269     0            Orcish Mines:2 a kobold blastminer
+    192   DEATH    8948  11    8244    18  458.0   242     0   316      Orcish Mines:2 an orc warrior
+     85   DEATH    8895  11    9059    14  647.1   233     0            Orcish Mines:1 an ettin
+     43   DEATH    8645  11   10342    43  240.5   216     0   384      Orcish Mines:2 a deep elf zephyrmancer
+    286   DEATH    8588  11   10182    16  636.4   257     0   121      Orcish Mines:2 a centaur
+    136   DEATH    8295  11    9886    16  617.9   186     0               Dungeon:9 an orc warlord
+    262   DEATH    8094  11    8979    15  598.6   249     0   209      Orcish Mines:1 a kobold blastminer
+    209   DEATH    8042  11    8927    15  595.1   268     0   139      Orcish Mines:2 an ettin
+     84   DEATH    8015  11    9959    16  622.4   191     0   306        Dungeon:10 a red devil
+     42   DEATH    7982  11    6763    11  614.8   229     0               Dungeon:9 Erica
+    183   DEATH    7907  11    8287    15  552.5   218     0   334      Lair of Beasts:1 an elephant
+    159   DEATH    7819  11    8620    12  718.3   178     0   299        Dungeon:10 an ogre mage
+    250   DEATH    7426  10    9384    13  721.8   237     0   155         Dungeon:9 Jeremiah
+     27   DEATH    7393  10   10353    21  493.0   223     0    98      Orcish Mines:2 divine providence
+    247   DEATH    7318  10    8112    14  579.4   217     0   323        Dungeon:10 an entropy weaver (shapeshifter)
+     47   DEATH    7302  10    7437    12  619.8   207     0               Dungeon:9 a basilisk
+    278   DEATH    7295  10    9072    14  648.0   217     0   154      Lair of Beasts:1 
+    251   DEATH    7273  10    8615    15  574.3   204     0            Orcish Mines:1 a warg
+    228   DEATH    7256  10    8377    14  598.4   210     0   450         Dungeon:9 a deep elf pyromancer
+    100   DEATH    7181  10    7516    16  469.8   256     0   257         Dungeon:9 a molten gargoyle
+      6   DEATH    7129  10   10044    14  717.4   219     0   239      Orcish Mines:2 a troll
+     69    QUIT    6925  10    9400    47  200.0   199     0   275        Dungeon:12 (quit)
+    185   DEATH    6902  10   10628    17  625.2   249     0   464        Dungeon:13 
+     56    QUIT    6490  10    8500    30  283.3   179     0   180                 ? (quit)
+     80   DEATH    6377  10    7696    14  549.7   232     0   231        Dungeon:10 a troll
+    131   DEATH    6346  10    7578    13  582.9   170     0   391         Dungeon:8 a centaur warrior
+     54   DEATH    6110  10    7494    10  749.4   172     0               Dungeon:9 nerve-wracking pain
+    176   DEATH    6104  10    8401    13  646.2   169     0   210         Dungeon:8 a killer bee
+    218   DEATH    5884  10    8423    13  647.9   182     0   192         Dungeon:8 a two-headed ogre
+    208   DEATH    5721  10    7922    12  660.2   210     0   275        Dungeon:10 a vampire
+    263   DEATH    5344  10    7642    12  636.8   173     0               Dungeon:9 a yak
+     49   DEATH    5305  10    6887    11  626.1   186     0   290         Dungeon:9 an efreet
+     94   DEATH    5297  10    7447    11  677.0   231     0   231         Dungeon:8 a white ugly thing
+    295   DEATH    5171  10    7889    13  606.8   173     0   220         Dungeon:9 Erica
+    109   DEATH    5039  10    8060    13  620.0   181     0   382         Dungeon:8 Jeremiah
+    276   DEATH    5028  10    6509    12  542.4   184     0   275         Dungeon:9 an orc warrior
+    219   DEATH    5009  10    6273    11  570.3   172     0   468         Dungeon:8 a troll
+     11   DEATH    4802  10    7716    12  643.0   213     0   611         Dungeon:9 a killer bee
+    236   DEATH    4550  10    5758    11  523.5   178     0    56         Dungeon:7 a shadowghast
+    290   DEATH    4522  10    6450    12  537.5   163     0   350         Dungeon:8 a centaur
+    167   DEATH    4454  10    8638    12  719.8   153     0   175         Dungeon:8 
+    220   DEATH    4328  10    7971    12  664.2   145     0            Lair of Beasts:1 a blink frog
+    119   DEATH    4184  10    6094    11  554.0   212     0   125         Dungeon:8 a gnoll sergeant
+     40   DEATH    4102  10    8263    23  359.3   190     0   137         Dungeon:9 a kobold brigand
+    170   DEATH    3880  10    7928    12  660.7   146     0               Dungeon:8 a two-headed ogre
+    237   DEATH    3857   9    7671    15  511.4   186     0               Dungeon:8 
+    124   DEATH    3813   9    5823    10  582.3   156     0   140         Dungeon:7 divine providence
+    138   DEATH    3788   9    6003    10  600.3   170     0               Dungeon:8 Maurice
+      2   DEATH    3782   9    6433    11  584.8   174     0               Dungeon:7 
+    300   DEATH    3539   9    5663     8  707.9   153     0   305         Dungeon:8 a two-headed ogre
+     33   DEATH    3215   9    6649    11  604.5   184     0               Dungeon:8 a wight
+    207   DEATH    3044   9    5567    11  506.1   154     0   193         Dungeon:8 an orc warrior
+     75   DEATH    2887   9    6369     8  796.1   153     0   288         Dungeon:9 a komodo dragon
+     44   DEATH    2843   9    7015    12  584.6   141     0   123         Dungeon:7 
+    132    QUIT    2795   9   28014   584   48.0   148     0   267    1    Dungeon:7 (quit)
+     38   DEATH    2634   9    5551     8  693.9   145     0               Dungeon:7 a wight
+     79   DEATH    2590   9    5105     8  638.1   162     0               Dungeon:7 an electric eel
+    243   DEATH    2522   9    6801     8  850.1   126     0               Dungeon:8 
+    139   DEATH    2389   9    5202     7  743.1   114     0   238         Dungeon:7 an electric eel
+      1   DEATH    2348   9    6452     9  716.9   148     0   196         Dungeon:7 a wyvern zombie
+     35   DEATH    2235   9    7462    11  678.4   184     0               Dungeon:7 Maurice
+    204   DEATH    2226   9    5382     9  598.0   122     0   264         Dungeon:7 a gnoll
+     57   DEATH    2206   9    5727     8  715.9   132     0               Dungeon:8 a yak
+     28   DEATH    2203   9    5077     9  564.1   139     0   256         Dungeon:6 a two-headed ogre
+    163   DEATH    2116   9    6975    13  536.5   155     0   121         Dungeon:7 
+    239   DEATH    2025   9    5781     8  722.6   155     0               Dungeon:7 an orc warrior
+     70   DEATH    1870   8    5851     7  835.9   146     0   224         Dungeon:7 divine providence
+    102   DEATH    1852   8    5391     8  673.9   138     0               Dungeon:6 a gnoll sergeant
+    169   DEATH    1796   8    5202     7  743.1   127     0   254         Dungeon:6 Maggie
+    150   DEATH    1778   8    5865     7  837.9   131     0               Dungeon:8 a wraith
+    130   DEATH    1726   8    6895    16  430.9   129     0    26         Dungeon:6 a centaur
+    268   DEATH    1628   8    4220     7  602.9   140     0               Dungeon:6 Duvessa
+     29   DEATH    1596   8    4273     6  712.2   133     0               Dungeon:5 
+    201   DEATH    1595   8    5807     8  725.9   119     0   290         Dungeon:8 a yak
+    104   DEATH    1570   8    3909     6  651.5   106     0               Dungeon:5 a two-headed ogre
+    105   DEATH    1523   8    4025     6  670.8   117     0               Dungeon:5 a vampire mosquito
+     90   DEATH    1523   8    4381     7  625.9   152     0               Dungeon:5 a gnoll
+    225   DEATH    1431   8    4278     6  713.0   112     0               Dungeon:5 a gnoll
+     21   DEATH    1386   8    4603     5  920.6   103     0               Dungeon:6 a troll
+     63   DEATH    1248   8    4738     6  789.7    99     0               Dungeon:6 a two-headed ogre
+    214   DEATH    1247   8    3985     6  664.2   124     0    56         Dungeon:6 an iguana
+    235   DEATH    1242   8    3820     7  545.7   139     0   153         Dungeon:5 divine providence
+      8   DEATH    1169   8    4882     6  813.7   107     0               Dungeon:6 a brown ugly thing
+    210   DEATH    1061   8    4837     6  806.2   105     0    56         Dungeon:6 an ogre
+     77   DEATH    1042   8    4349     7  621.3   110     0               Dungeon:6 a centaur
+    194   DEATH    1005   8    4145     5  829.0   103     0               Dungeon:5 
+    283   DEATH     977   7    4445     8  555.6   104     0   120         Dungeon:8 a centaur warrior
+    113   DEATH     977   7    3997     6  666.2   114     0               Dungeon:5 a gnoll
+    110   DEATH     974   7    4061     5  812.2    87     0   153         Dungeon:5 an ogre
+     55    QUIT     942   7   27518   371   74.2    90     0   188    1    Dungeon:5 (quit)
+    117   DEATH     924   7    4970     7  710.0    97     0               Dungeon:6 divine providence
+     45   DEATH     920   7    3576     6  596.0   128     0   225         Dungeon:5 a gnoll sergeant
+    144   DEATH     913   7    4118     4 1029.5    91     0               Dungeon:5 a gnoll sergeant
+    254   DEATH     873   7    4644     7  663.4   104     0               Dungeon:6 a steam dragon
+    190   DEATH     819   7    2809     4  702.2    71     0               Dungeon:4 a wight
+    261   DEATH     748   7    3371     5  674.2   111     0               Dungeon:4 
+    187   DEATH     718   7    4649     8  581.1    98     0               Dungeon:5 a wight
+    164   DEATH     704   7    4546     6  757.7   105     0               Dungeon:5 
+    211   DEATH     703   7    4837     6  806.2    91     0   148         Dungeon:6 a wight
+     62   DEATH     691   7    3649     6  608.2    96     0               Dungeon:4 an ogre
+    265   DEATH     672   7    3853     6  642.2   106     0   302         Dungeon:8 Psyche
+    193   DEATH     660   7    3542     5  708.4   108     0               Dungeon:5 an ogre
+     13   DEATH     620   7    3712     5  742.4    75     0               Dungeon:4 Duvessa
+     67   DEATH     611   7    3801     5  760.2   128     0               Dungeon:5 an orc priest
+     51   DEATH     578   7    3746     6  624.3    70     0   231         Dungeon:5 Prince Ribbit
+    166   DEATH     569   7    2761     3  920.3    68     0               Dungeon:4 Pikel
+    120   DEATH     568   7    4614     5  922.8    95     0               Dungeon:5 a gnoll
+    168   DEATH     564   7    2473     3  824.3    65     0               Dungeon:4 a wight
+    178   DEATH     538   7    3092     6  515.3   102     0    36         Dungeon:4 Duvessa
+    199   DEATH     510   6    3450     5  690.0   111     0               Dungeon:5 
+    200   DEATH     478   6    3207     4  801.8    83     0               Dungeon:4 a steam dragon
+     71   DEATH     422   6    3869     4  967.2    98     0               Dungeon:5 Menkaure
+    259   DEATH     389   6    3150     3 1050.0    77     0   132         Dungeon:4 Sigmund
+    266   DEATH     382   6    3149     4  787.2    75     0               Dungeon:4 Menkaure
+    296   DEATH     375   6    1379     2  689.5    56     0    91         Dungeon:3 a centaur
+    137   DEATH     356   6    2238     2 1119.0    55     0               Dungeon:5 Sigmund
+    245   DEATH     315   6    3230     4  807.5    87     0    57                 ? a jelly's acid
+    231    QUIT     309   6    2800    34   82.4    51     0               Dungeon:5 (quit)
+    173   DEATH     280   6    3813     5  762.6    68     0    72         Dungeon:7 an unseen horror
+    271   DEATH     265   5    2718     4  679.5    84     0               Dungeon:4 an orc warrior
+    299   DEATH     260   5    2451     3  817.0    56     0               Dungeon:4 a wight
+    157   DEATH     256   5    3630     4  907.5    79     0   220         Dungeon:5 an ogre
+     92   DEATH     249   5    2037     2 1018.5    48     0               Dungeon:3 nerve-wracking pain
+    233   DEATH     224   5    2662     4  665.5    78     0               Dungeon:4 
+    151   DEATH     213   5    2419     3  806.3    58     0               Dungeon:4 an ogre
+    280   DEATH     212   5    2520     2 1260.0    62     0               Dungeon:3 
+    175   DEATH     208   5    3067     4  766.8    69     0               Dungeon:4 an ogre
+     87   DEATH     196   5    2463     2 1231.5    55     0               Dungeon:4 a jelly's acid
+    141   DEATH     186   5    2096     2 1048.0    71     0               Dungeon:3 
+    264   DEATH     185   5    2957     3  985.7    56     0               Dungeon:4 a wight
+    270   DEATH     179   5    2968     4  742.0    59     0               Dungeon:3 an orc wizard
+     19   DEATH     178   5    2860     3  953.3    54     0    99         Dungeon:4 a gnoll
+    272   DEATH     177   5    2515     3  838.3    78     0               Dungeon:4 a gnoll
+     86   DEATH     174   5    2191     2 1095.5    55     0               Dungeon:3 a gnoll
+     98   DEATH     171   5    2890     3  963.3    62     0   272         Dungeon:3 an ogre
+    152   DEATH     159   5    2682     2 1341.0    47     0               Dungeon:4 an ogre
+     99   DEATH     159   5    2165     3  721.7    59     0               Dungeon:3 Edmund
+    174   DEATH     152   5    3014     3 1004.7    62     0               Dungeon:4 a gnoll
+     16   DEATH     136   4    2153     3  717.7    49     0               Dungeon:3 a gnoll
+    229   DEATH     133   4    1901     2  950.5    46     0               Dungeon:3 an orc wizard
+    125   DEATH     129   4    2109     2 1054.5    39     0    26         Dungeon:3 an orc wizard
+    224   DEATH     126   4    1805     2  902.5    39     0    90         Dungeon:4 an ogre
+     18   DEATH     126   4    2334     3  778.0    76     0               Dungeon:3 Terence
+    213   DEATH     125   4    1937     3  645.7    60     0               Dungeon:3 Sigmund
+     93   DEATH     123   4    1854     2  927.0    56     0               Dungeon:2 a gnoll
+    285   DEATH     121   4    2078     2 1039.0    48     0               Dungeon:3 nerve-wracking pain
+    221   DEATH     114   4    2259     3  753.0    78     0               Dungeon:4 
+    186   DEATH     112   4    1832     2  916.0    39     0               Dungeon:2 Sigmund
+    274   DEATH     109   4    2102     2 1051.0    68     0               Dungeon:3 an orc wizard
+     66   DEATH     109   4    1809     3  603.0    41     0               Dungeon:3 divine providence
+    147   DEATH     107   4    1059     1 1059.0    47     0               Dungeon:2 Sigmund
+     88   DEATH     107   4    2133     2 1066.5    62     0               Dungeon:3 Jessica
+     74   DEATH     105   4    2932     3  977.3    61     0               Dungeon:4 an ogre
+    260   DEATH      93   4    1802     2  901.0    54     0               Dungeon:2 Sigmund
+    165    QUIT      90   4    2900    32   90.6    46     0               Dungeon:4 (quit)
+    121   DEATH      89   4    1340     1 1340.0    46     0               Dungeon:2 a gnoll
+     26   DEATH      86   4    2256     2 1128.0    46     0    48         Dungeon:3 nerve-wracking pain
+     89   DEATH      84   4    2002     2 1001.0    52     0    42         Dungeon:3 Ijyb
+     68   DEATH      84   4    1345     2  672.5    32     0               Dungeon:3 divine providence
+     60   DEATH      84   4    1875     2  937.5    60     0    30         Dungeon:3 a frilled lizard
+    145   DEATH      83   4    1832     1 1832.0    41     0               Dungeon:3 an orc priest
+    191   DEATH      78   4    1664     2  832.0    48     0               Dungeon:3 a black bear
+    287   DEATH      75   4    1237     1 1237.0    41     0               Dungeon:2 a gnoll
+    242   DEATH      74   4    1675     1 1675.0    47     0               Dungeon:3 a centaur
+    215   DEATH      74   4    1630     2  815.0    40     0               Dungeon:3 a jelly's acid
+    298   DEATH      71   4     795     1  795.0    38     0               Dungeon:2 a gnoll
+    155   DEATH      61   3    1465     4  366.2    39     0    22         Dungeon:2 a gnoll
+    279   DEATH      60   3    2016     2 1008.0    40     0               Dungeon:3 Grinder
+     65   DEATH      59   3     937     1  937.0    28     0               Dungeon:2 divine providence
+    188   DEATH      56   3    1707     2  853.5    37     0    24         Dungeon:2 Natasha
+    205   DEATH      51   3    1056     1 1056.0    37     0               Dungeon:2 a gnoll
+    101   DEATH      51   3    1191     1 1191.0    38     0               Dungeon:2 an iguana
+      4   DEATH      51   3     781     1  781.0    27     0               Dungeon:2 a gnoll
+    153   DEATH      49   3     985     1  985.0    37     0               Dungeon:2 a gnoll
+    248   DEATH      48   3    1019     1 1019.0    36     0               Dungeon:2 
+    246   DEATH      48   3    1091     1 1091.0    35     0               Dungeon:2 a gnoll
+     96   DEATH      44   3     660     1  660.0    34     0               Dungeon:2 Robin
+    128   DEATH      42   3    1167     1 1167.0    35     0               Dungeon:2 a gnoll
+    244   DEATH      41   3    1495     1 1495.0    26     0    48         Dungeon:2 a gnoll
+    116   DEATH      37   3     686     1  686.0    23     0               Dungeon:2 a gnoll
+    241   DEATH      32   3    1006     1 1006.0    25     0               Dungeon:2 a hobgoblin
+     59   DEATH      32   3    1576     1 1576.0    30     0    97         Dungeon:3 
+     41   DEATH      32   3     754     1  754.0    27     0               Dungeon:1 a gnoll
+     25   DEATH      30   3     851     0           24     0               Dungeon:2 an adder
+    162   DEATH      28   2     667     0           22     0               Dungeon:2 an adder
+    122   DEATH      28   2     953     1  953.0    25     0               Dungeon:2 Sigmund
+    232   DEATH      25   2    1029     1 1029.0    24     0               Dungeon:2 Sigmund
+    281   DEATH      24   2    1129     1 1129.0    20     0               Dungeon:2 a hobgoblin
+    217   DEATH      23   2     329     0           19     0               Dungeon:1 
+    203   DEATH      21   2     556     0           17     0               Dungeon:2 Terence
+     95   DEATH      21   2     562     0           18     0               Dungeon:1 a gnoll
+     22   DEATH      21   2     961     0           18     0    39         Dungeon:2 Sigmund
+    297   DEATH      19   2     527     0           15     0               Dungeon:1 
+    160   DEATH      18   2     920     1  920.0    17     0               Dungeon:2 
+     12   DEATH      18   2     445     0           15     0               Dungeon:1 a ball python
+    277   DEATH      17   2     441     0           19     0               Dungeon:1 a gnoll
+    103   DEATH      12   2     462     0           11     0               Dungeon:1 a ball python
+    216   DEATH      11   2     955     1  955.0    11     0               Dungeon:2 Sigmund
+     39   DEATH       9   2      20     0            1     0               Dungeon:1 a kobold
+    196   DEATH       7   1     128     0            6     0               Dungeon:1 an endoplasm
+     20   DEATH       6   1     126     0            5     0               Dungeon:1 a ball python
+     61   DEATH       5   1      65     0            4     0               Dungeon:1 a hobgoblin
+     37   DEATH       5   1      54     0            5     0               Dungeon:1 an endoplasm
+    112   DEATH       4   1      74     0            4     0               Dungeon:1 a hobgoblin
+    258   DEATH       2   1      60     0            1     0               Dungeon:1 a ball python
+    111   DEATH       2   1      31     0            2     0               Dungeon:1 a gnoll
+     78   DEATH       2   1      43     0            2     0               Dungeon:1 a gnoll
+     76   DEATH       2   1      57     0            2     0               Dungeon:1 a dart slug
+     64   DEATH       2   1     128     0            3     0               Dungeon:1 a ball python
+    275   DEATH       1   1      58     0            1     0               Dungeon:1 a ball python
+     52   DEATH       1   1     113     0            2     0               Dungeon:2 a ribbon worm
+    158   DEATH       0   1      47     0            ?     0               Dungeon:1 a jackal
+    118   DEATH       0   1      36     0            ?     0               Dungeon:1 a ball python
+    115   DEATH       0   1      28     0            ?     0               Dungeon:1 an endoplasm
+

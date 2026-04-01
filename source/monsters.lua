@@ -106,8 +106,33 @@ end
 -- XL < num, otherwise we want a function. ["*"] should be a table of
 -- functions to check for every monster.
 local scary_monsters = {
+    ["gnoll"] = { xl = 4 },
+    ["iguana"] = { xl = 4 },
+    ["Jessica"] = { xl = 4 },
+    ["adder"] = { xl = 4 },
+    ["Terence"] = { xl = 5 },
+    ["Natasha"] = { xl = 5 },
+    ["Edmund"] = { xl = 6 },
+    ["gnoll sergeant"] = { xl = 6 },
+    ["Sigmund"] = { xl = 6 },
+    ["Ijyb"] = { xl = 6 },
+    ["Pikel"] = { xl = 7 },
+    ["Robin"] = { xl = 6 },
+
+    ["ogre"] = { xl = 7 },
     ["ice beast"] = { xl = 7, resists = { rC = 0.75 } },
 
+    ["gnoll bouda"] = { xl = 8 },
+    ["Duvessa"] = { xl = 8 },
+    ["Grinder"] = { xl = 8 },
+
+    -- Uniques with mechanics that need special avoidance thresholds
+    -- beyond the generic +3 unique threat boost.
+    ["Sonja"] = { xl = 20 },    -- distortion weapon → Abyss banishment
+    ["Ilsuiw"] = { xl = 20 },   -- mesmerise + ranged → no escape
+
+    ["two-headed ogre"] = { xl = 12 },
+    ["acid dragon"] = { xl = 14 },
     ["fire crab"] = { xl = 14, resists = { rF = 0.65} },
     ["wolf spider"] = { xl = 14 },
     ["ice statue"] = { xl = 14, resists = { rC = 1 } },
@@ -126,6 +151,13 @@ local scary_monsters = {
     ["white very ugly thing"] = { xl = 17, resists = { rC = 0.75 } },
     ["Lodul"] = { xl = 17, resists = { rElec = 0.75 } },
 
+    ["stone giant"] = { xl = 20 },
+    ["ettin"] = { xl = 20 },
+    ["sun moth"] = { xl = 20, resists = { rF = 0.75 } },
+    ["tengu reaver"] = { xl = 20 },
+    ["deep elf master archer"] = { xl = 20 },
+    ["juggernaut"] = { xl = 24 },
+    ["salamander tyrant"] = { xl = 22, resists = { rF = 0.75 } },
     ["ironbound frostheart"] = { xl = 20, resists = { rC = 0.75 } },
     ["ironbound thunderhulk"] = { xl = 20, resists = { rElec = 0.75 } },
 
@@ -148,6 +180,7 @@ local scary_monsters = {
     ["doom hound"] = { xl = 30,
         check = function(mons) return mons:is("ready_to_howl") end },
     ["electric golem"] = { xl = 30, resists = { rElec = 1 } },
+    ["Killer Klown"] = { xl = 30 },
     ["orb of fire"] = { xl = 30, resists = { rF = 1 } },
     ["pandemonium lord"] = { xl = 30 },
     ["player ghost"] = { xl = 30 },
@@ -277,15 +310,18 @@ function update_invis_monsters(closest_invis_pos)
     end
 
     if invis_monster and invis_monster_turns > 100 then
-        say("Invisibility monster not found???")
-        invis_monster = false
+        qw_assert(false, "invisible monster tracked for 100+ turns without"
+            .. " being found at "
+            .. (invis_monster_pos
+                and cell_string_from_map_position(invis_monster_pos)
+                or "unknown"))
     end
 
     if not invis_monster then
         if not options.autopick_on then
             magic(control('a'))
             qw.do_dummy_action = false
-            coroutine.yield()
+            qw_yield("action")
         end
 
         invis_monster_turns = 0
@@ -681,6 +717,14 @@ function monster_threat(mons, duration_level)
     end
 
     local threat = mons.minfo:threat()
+
+    -- All uniques get a flat threat boost. Uniques have special abilities,
+    -- better gear, and unique mechanics that make them disproportionately
+    -- dangerous compared to regular monsters at the same depth.
+    if mons.minfo:is_unique() then
+        threat = threat + 3
+    end
+
     local entry = scary_monsters[mons:short_name()]
     local player_xl = you.xl()
     if entry and player_xl < entry.xl

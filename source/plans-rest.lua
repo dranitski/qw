@@ -7,12 +7,12 @@ function plan_cure_poison()
     end
 
     if drink_by_name("curing") then
-        say("(to cure poison)")
+        note_decision("REST", "(to cure poison)")
         return true
     end
 
     if can_trogs_hand() then
-        trogs_hand()
+        use_ability("Trog's Hand")
         return true
     end
 
@@ -108,14 +108,14 @@ function should_ally_rest()
 end
 
 function wait_one_turn(short_delay)
-    magic("s")
+    magic("s", "movement")
     if short_delay then
         next_delay = 5
     end
 end
 
 function long_rest()
-    magic("5")
+    magic("5", "movement")
 end
 
 function plan_long_rest()

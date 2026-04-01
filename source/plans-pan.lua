@@ -19,7 +19,7 @@ end
 
 function plan_go_to_pan_downstairs()
     if not unable_to_travel() and in_branch("Pan") then
-        magic("X>\r")
+        magic("X>\r", "map_search")
         return true
     end
 
@@ -36,7 +36,7 @@ end
 
 function plan_dive_go_to_pan_downstairs()
     if want_to_dive_pan() then
-        magic("X>\r")
+        magic("X>\r", "map_search")
         return true
     end
     return false
@@ -46,7 +46,7 @@ function plan_go_to_pan_exit()
     if not unable_to_travel()
             and in_branch("Pan")
             and not want_to_be_in_pan() then
-        magic("X<\r")
+        magic("X<\r", "map_search")
         return true
     end
 
@@ -73,7 +73,7 @@ function plan_go_down_pan()
     end
 
     if pan_stairs_turn == you.turns() then
-        magic("X" .. control('f'))
+        magic("X" .. control('f'), "map_search")
         return true
     end
 

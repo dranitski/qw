@@ -64,6 +64,12 @@ function initialize_rc_variables()
         qw.max_memory = MAX_MEMORY * 1024
     end
 
+    -- Reduce GC frequency for speed. Default pause=200 (GC runs when memory
+    -- doubles), stepmul=200. Higher pause = less frequent GC = faster but
+    -- more memory. With max_memory guard in run_qw(), we can afford this.
+    collectgarbage("setpause", 400)
+    collectgarbage("setstepmul", 200)
+
     qw.coroutine_throttle = COROUTINE_THROTTLE
 
     qw.delayed = DELAYED
@@ -75,6 +81,8 @@ function initialize_rc_variables()
     end
 
     qw.quit_turns = QUIT_TURNS
+    qw.max_realtime = MAX_REALTIME
+    qw.save_interval = SAVE_INTERVAL
     qw.wizmode_death = WIZMODE_DEATH
 
     qw.combo_cycle = COMBO_CYCLE
@@ -94,6 +102,22 @@ function initialize_rc_variables()
 
     qw.shield_crazy = SHIELD_CRAZY and you.race() ~= "Coglin"
     qw.full_inventory_panic = FULL_INVENTORY_PANIC
+
+    qw.decision_log_dir = DECISION_LOG_DIR
+
+    -- Per-game counters for post-game analysis
+    qw.stats = {
+        flees = 0,
+        teleports = 0,
+        berserks = 0,
+        heals = 0,
+        stairdances = 0,
+        purchases = 0,
+        stuck_turns = 0,
+        explore_stuck = 0,
+        zot_damage = 0,
+        wanted_altars = 0,
+    }
 end
 
 function initialize_enums()
@@ -120,10 +144,78 @@ function initialize()
 
     initialize_rc_variables()
 
+    -- Set up non-exiting checkpoint saves if the patched crawl API is
+    -- available. This tells crawl's C++ side to save every N turns
+    -- automatically in world_reacts(), which works even during autoexplore.
+    if crawl.save_checkpoint and qw.save_interval and qw.save_interval > 0 then
+        crawl.save_checkpoint(qw.save_interval)
+    end
+
+    -- Set up turn-limit quit via C++ world_reacts(). This fires every turn
+    -- regardless of autoexplore/travel, so the quit is exact.
+    if crawl.quit_game and MAX_TURNS and MAX_TURNS > 0 then
+        crawl.quit_game(MAX_TURNS)
+    end
+
     initialize_debug()
     initialize_const()
     initialize_plan_cascades()
     initialize_c_persist()
+
+    -- Force goal re-evaluation on every load so code changes to goal logic
+    -- take effect immediately when restoring from a save.
+    qw.want_goal_update = true
+
+    -- Three rendering modes, controlled by NO_HEADLESS rc variable:
+    --   nil/false  → headless: no rendering, fastest, default for batch runs
+    --   true       → visual+keyboard suppressed: renders but deterministic
+    --                 (terminal spectating via run-terminal.sh)
+    -- To get deterministic results that match between headless and visual,
+    -- use --visual in debug-seed.py so both render identically.
+    if crawl.enter_headless and not NO_HEADLESS then
+        crawl.enter_headless()
+    elseif crawl.suppress_keyboard and NO_HEADLESS then
+        crawl.suppress_keyboard()
+    end
+
+    -- Fix stale c_persist: if Orc is explored but D:11/D:12 autoexplore
+    -- data is missing (from a previous hack), mark them as explored to
+    -- prevent the goal system from looping.
+    if c_persist.autoexplore then
+        local orc_done = c_persist.autoexplore["Orc:1"]
+            and c_persist.autoexplore["Orc:2"]
+        if orc_done then
+            if not c_persist.autoexplore["D:11"] then
+                c_persist.autoexplore["D:11"] = const.autoexplore.needed + 1
+            end
+            if not c_persist.autoexplore["D:12"] then
+                c_persist.autoexplore["D:12"] = const.autoexplore.needed + 1
+            end
+        end
+    end
+    -- HACK disabled: D:11-12 exploration clearing was needed to get past
+    -- Sonja on Lair:4 but causes loops now that she's dead.
+
+    -- Prefer Spider over Shoals (Ilsuiw mesmerise is lethal for berserker).
+    -- Only set if not already chosen (don't override random selection).
+    if not c_persist.lair_branch_order then
+        c_persist.lair_branch_order = { "Spider", "Shoals" }
+    end
+
+    -- Re-enable shopping on each load IF we don't have 3 runes yet.
+    -- With 3 runes, head to Zot instead of shopping.
+    if you.num_runes() < 3 then
+        local shoplist = items.shopping_list()
+        if shoplist and #shoplist > 0 then
+            c_persist.done_shopping = false
+        end
+    else
+        c_persist.done_shopping = true
+        -- Force goal away from Shopping when we have 3 runes.
+        if goal_status == "Shopping" then
+            qw.want_goal_update = true
+        end
+    end
 
     if not cache_parity then
         traversal_maps_cache = {}
@@ -177,21 +269,21 @@ function initialize()
 end
 
 function note_qw_data()
-    note("qw: Version: " .. qw.version)
-    note("qw: Game counter: " .. c_persist.record.counter)
-    note("qw: Melee chars always use a shield: " .. bool_string(qw.shield_crazy))
+    note_decision("INIT", "qw: Version: " .. qw.version)
+    note_decision("INIT", "qw: Game counter: " .. c_persist.record.counter)
+    note_decision("INIT", "qw: Melee chars always use a shield: " .. bool_string(qw.shield_crazy))
 
     if not util.contains(god_options(), you.god()) then
-        note("qw: God list: " .. table.concat(god_options(), ", "))
-        note("qw: Allow faded altars: " .. bool_string(qw.faded_altar))
+        note_decision("INIT", "qw: God list: " .. table.concat(god_options(), ", "))
+        note_decision("INIT", "qw: Allow faded altars: " .. bool_string(qw.faded_altar))
     end
 
-    note("qw: Do Orc after clearing Dungeon:" .. branch_depth("D") .. " "
+    note_decision("INIT", "qw: Do Orc after clearing Dungeon:" .. branch_depth("D") .. " "
         .. bool_string(qw.late_orc))
-    note("qw: Do second Lair branch before Depths: " ..
+    note_decision("INIT", "qw: Do second Lair branch before Depths: " ..
         bool_string(qw.early_second_rune))
-    note("qw: Lair rune preference: " .. qw.rune_preference)
-    note("qw: Goals: " .. goal_options())
+    note_decision("INIT", "qw: Lair rune preference: " .. qw.rune_preference)
+    note_decision("INIT", "qw: Goals: " .. goal_options())
 end
 
 function first_turn_initialize()

@@ -146,7 +146,7 @@ function choose_skills()
     local skills = {}
     if best_val then
         if debug_channel("skills") then
-            dsay("Best skill: " .. best_sk .. ", value: " .. best_val)
+            note_decision("SKILL", "Best skill: " .. best_sk .. ", value: " .. best_val)
         end
 
         table.insert(skills, best_sk)

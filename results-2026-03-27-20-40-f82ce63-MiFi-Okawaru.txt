@@ -1,0 +1,395 @@
+
+======================================================================
+QW BATCH ANALYSIS — 300 games — /home/agent/repos/qw/debug-seed-runs
+======================================================================
+
+OUTCOMES
+  DEATH     246  (82%)
+  QUIT       54  (18%)
+
+CORE METRICS
+  Score                     mean= 22015.4  median=  3465.0  p90= 65455.0  best=257658.0  total=   6604606
+  XL                        mean=     9.2  median=     9.0  p90=    14.0  best=    19.0  total=      2751
+  Turns                     mean=  9965.9  median=  7100.0  p90= 30000.0  best= 30000.0  total=   2989770
+  Time (s)                  mean=    29.7  median=    11.0  p90=    88.0  best=   492.0  total=      8900
+  Turns/sec                 mean=   599.7  median=   574.5  p90=   870.5  best=  1862.0  total=  176310.6
+  Kills                     mean=   239.0  median=   174.0  p90=   535.0  best=  1263.0  total=     71460
+  Runes                     mean=     0.0  median=     0.0  p90=     0.0  best=     0.0  total=         0
+  Gold collected            mean=   710.7  median=   401.0  p90=  1710.0  best=  4096.0  total=    210370
+  Gold spent                mean=   615.4  median=   337.0  p90=  1724.0  best=  3540.0  total=     98462
+  Zot damage                mean=     0.0  median=     0.0  p90=     0.0  best=     1.0  total=         3
+
+BRANCH REACH (% of games)
+  D             300  (100.0%)  deepest=15
+  Lair          105  ( 35.0%)  deepest=5
+  Orc            79  ( 26.3%)  deepest=2
+  Spider         14  (  4.7%)  deepest=4
+  Swamp          13  (  4.3%)  deepest=4
+  Shoals          9  (  3.0%)  deepest=4
+  Abyss           8  (  2.7%)  deepest=3
+  Snake           6  (  2.0%)  deepest=4
+
+TURNS PER BRANCH (mean, across games that visited)
+  D            mean= 6753.9  total= 2026177  games=300
+  Lair         mean= 3738.9  total=  392584  games=105
+  Orc          mean= 4577.4  total=  361616  games=79
+  Spider       mean= 2819.7  total=   39476  games=14
+  Swamp        mean= 2819.5  total=   36653  games=13
+  Temple       mean=  228.2  total=   35603  games=156
+  Gauntlet     mean= 1324.1  total=   23833  games=18
+  Sewer        mean=  622.2  total=   23021  games=37
+  Snake        mean= 3284.0  total=   19704  games=6
+  Shoals       mean= 1841.1  total=   16570  games=9
+  Ossuary      mean=  558.2  total=   11164  games=20
+  Abyss        mean=  381.8  total=    3054  games=8
+  Bazaar       mean=  315.0  total=     315  games=1
+
+TOP KILLERS
+    22  ( 7.3%)  a gnoll
+    13  ( 4.3%)  divine providence
+    11  ( 3.7%)  Sigmund
+     9  ( 3.0%)  an ogre
+     8  ( 2.7%)  Duvessa
+     8  ( 2.7%)  an orc warrior
+     7  ( 2.3%)  a kobold blastminer
+     7  ( 2.3%)  an orc wizard
+     6  ( 2.0%)  a two-headed ogre
+     4  ( 1.3%)  a death yak
+     4  ( 1.3%)  a wight
+     3  ( 1.0%)  Ijyb
+     3  ( 1.0%)  Maurice
+     3  ( 1.0%)  a black bear
+     3  ( 1.0%)  a cyclops
+
+DEATH LOCATIONS
+    36  Dungeon:4
+    25  Dungeon:5
+    22  Dungeon:3
+    20  Dungeon:2
+    19  Dungeon:6
+    19  Orcish Mines:2
+    15  Dungeon:7
+    14  Orcish Mines:1
+    13  Dungeon:8
+     9  Lair of Beasts:2
+     7  Dungeon:9
+     7  Lair of Beasts:1
+     4  Lair of Beasts:5
+     4  Abyss:1
+     4  Dungeon:11
+
+QW BOT METRICS (per game, from qw_stats.txt)
+  Stuck turns               mean=    89.5  median=     1.0  p90=    74.0  best=  1203.0  total=     26845
+  Flees                     mean=    38.1  median=    23.0  p90=    83.0  best=   757.0  total=     11431
+  Teleports                 mean=     2.1  median=     1.0  p90=     5.0  best=    14.0  total=       644
+  Berserks                  mean=     0.0  median=     0.0  p90=     0.0  best=     0.0  total=         0
+  Heals                     mean=     3.9  median=     3.0  p90=     9.0  best=    20.0  total=      1162
+  Stairdances               mean=     4.5  median=     3.0  p90=    13.0  best=    31.0  total=      1336
+  Purchases                 mean=     2.7  median=     1.0  p90=     9.0  best=    24.0  total=       816
+  Explore stuck             mean=     0.0  median=     0.0  p90=     0.0  best=     2.0  total=        10
+  Wanted altars             mean=     0.6  median=     1.0  p90=     1.0  best=     2.0  total=       179
+
+PER-GAME RESULTS (sorted by score)
+   Seed Outcome   Score  XL   Turns  Time    T/s Kills Runes  Gold  Zot Alt        God     Location Killer
+  ───── ─────── ─────── ─── ─────── ───── ────── ───── ───── ───── ──── ─── ────────── ──────────── ──────────────────────────────
+    200    QUIT  257658  19   30000   107  280.4  1263     0  1846        1    Okawaru Spider Nest:4 (quit)
+    231    QUIT  234622  18   30000   103  291.3  1036     0  1711        1    Okawaru      Swamp:4 (quit)
+    258    QUIT  206488  18   30000   114  263.2   992     0  3217        1    Okawaru      Swamp:4 (quit)
+    206    QUIT  198200  17   30000    95  315.8   959     0  2941        1    Okawaru Spider Nest:3 (quit)
+    180    QUIT  188817  17   30000    83  361.4   866     0  1937        1    Okawaru      Swamp:4 (quit)
+    182   DEATH  182008  17   26117    82  318.5   978     0  1641        1    Okawaru Spider Nest:4 a wolf spider
+     58   DEATH  179125  17   28715    95  302.3   930     0  1412        1    Okawaru      Swamp:4 the 26-headed Lernaean hydra
+     15    QUIT  178020  17   30000    88  340.9   971     0  1312        2    Okawaru Spider Nest:3 (quit)
+    282    QUIT  177045  17   30000    73  411.0   951     0  2315        1    Okawaru      Swamp:3 (quit)
+    144    QUIT  175722  17   30000    83  361.4   904     0  2882        1    Okawaru Lair of Beasts:3 (quit)
+    175   DEATH  173846  17   28609   110  260.1   835     0  2079        1    Okawaru  Snake Pit:4 a salamander
+      3    QUIT  165654  17   30000   148  202.7   914     0  3418        2    Okawaru     Shoals:3 (quit)
+     60   DEATH  152634  17   27344   100  273.4   819     0  1724        1    Okawaru     Shoals:2 a merfolk
+     10    QUIT  147820  16   30000    88  340.9   864     0  3540        1    Okawaru     Shoals:2 (quit)
+    115    QUIT  146225  16   30000    96  312.5   823     0  2047        1    Okawaru     Shoals:2 (quit)
+    235    QUIT  137732  16   30000    82  365.9   892     0  1484        1    Okawaru     Shoals:2 (quit)
+    223    QUIT  135897  16   30000    76  394.7   778     0  1024        1    Okawaru     Shoals:2 (quit)
+    284    QUIT  126668  16   30000    69  434.8   774     0  2023        1    Okawaru  Snake Pit:2 (quit)
+     45    QUIT  121232  16   21800    74  294.6   757     0  1819        1    Okawaru            ? (quit)
+    131   DEATH  119186  16   26398    74  356.7   743     0  1106        1    Okawaru     Shoals:1 a merfolk
+    240    QUIT  111713  16   30000    86  348.8   697     0  2261        1    Okawaru   Dungeon:11 (quit)
+     73   DEATH  105225  15   25461    59  431.5   728     0  2185        2    Okawaru     Shoals:2 a death yak
+    129   DEATH   97626  15   23520    58  405.5   647     0   662        1    Okawaru      Swamp:1 a tyrant leech
+    245   DEATH   93453  15   22642    52  435.4   664     0   281        1    Okawaru   Dungeon:15 a skeletal warrior
+    276   DEATH   83465  15   19673    45  437.2   559     0   871        1    Okawaru   Dungeon:14 an enormous slime creature
+    140   DEATH   80072  15   21411    45  475.8   577     0  1080        1    Okawaru Orcish Mines:2 a two-headed ogre
+    237    QUIT   71885  14   30000    83  361.4   536     0  1317        1    Okawaru   Dungeon:13 (quit)
+     59   DEATH   70307  14   20738    56  370.3   535     0   811          Gold:   51 Lair of Beasts:5 
+     42    QUIT   69840  14   19100    52  367.3   575     0              1    Okawaru            ? (quit)
+     23   DEATH   65455  14   19282    36  535.6   590     0  1258        1    Okawaru   Dungeon:14 a deep elf knight
+    217   DEATH   64992  14   21977    49  448.5   520     0  1272        1    Okawaru      Abyss:1 a starcursed mass
+    203   DEATH   63193  14   20138    43  468.3   527     0   300        1    Okawaru   Dungeon:15 a two-headed ogre
+     69    QUIT   58828  14   18900    63  300.0   484     0  1421        1    Okawaru            ? (quit)
+    230    QUIT   54031  14   20200    56  360.7   475     0  1189        2    Okawaru            ? (quit)
+    197   DEATH   54027  14   19495    51  382.3   410     0              1    Okawaru Lair of Beasts:5 a death yak
+    293   DEATH   53013  14   18974    40  474.4   461     0  1190        1    Okawaru Lair of Beasts:5 divine providence
+    255   DEATH   51639  14   19915    37  538.2   535     0              1    Okawaru Lair of Beasts:4 an oklob plant
+    135   DEATH   51426  14   19809    36  550.2   448     0   307        1    Okawaru Lair of Beasts:5 a catoblepas
+     26    QUIT   36986  13   30000   162  185.2   408     0   218        1    Okawaru   Dungeon:10 (quit)
+    196    QUIT   35589  13   17400    46  378.3   404     0    78        1    Okawaru            ? (quit)
+     68    QUIT   33897  13   30000   170  176.5   362     0  1021        1    Okawaru Lair of Beasts:1 (quit)
+     74    QUIT   32942  13   30000   141  212.8   398     0   414        1    Okawaru Lair of Beasts:2 (quit)
+    257    QUIT   31933  13   14400    49  293.9   370     0   886        1    Okawaru            ? (quit)
+    289    QUIT   30811  13   14200    39  364.1   319     0              1    Okawaru Orcish Mines:1 (quit)
+    172    QUIT   30606  13   16400    78  210.3   361     0   904        2    Okawaru            ? (quit)
+    179    QUIT   29389  13   13500    61  221.3   366     0   420        1    Okawaru            ? (quit)
+    234    QUIT   29326  13   30000   117  256.4   404     0    72        1    Okawaru Lair of Beasts:2 (quit)
+    247    QUIT   29164  13   14700    48  306.2   341     0   371        1    Okawaru            ? (quit)
+    252    QUIT   29078  13   30000   105  285.7   403     0   260        1    Okawaru    Dungeon:9 (quit)
+    228    QUIT   28501  13   30000   121  247.9   376     0   618        1    Okawaru Lair of Beasts:2 (quit)
+      5   DEATH   27812  13   11932    23  518.8   304     0  1229        1    Okawaru      Abyss:2 a laughing skull
+    267   DEATH   27739  13   11198    26  430.7   288     0   756        1    Okawaru   Dungeon:10 a tarantella (shapeshifter)
+    126    QUIT   26942  13   13845    35  395.6   358     0   126        1    Okawaru            ? (quit)
+     28    QUIT   26867  13   30000   164  182.9   378     0   569        1    Okawaru Lair of Beasts:1 (quit)
+    285    QUIT   25994  12   13100    59  222.0   335     0   210        1    Okawaru   Dungeon:11 (quit)
+    291    QUIT   25767  12   12400    33  375.8   364     0   464        1    Okawaru            ? (quit)
+    273    QUIT   25341  12   30000   153  196.1   419     0              1    Okawaru Lair of Beasts:2 (quit)
+     83   DEATH   25218  12   13736    29  473.7   344     0   648        1    Okawaru Orcish Mines:2 a kobold blastminer
+     57   DEATH   24526  12   12411    24  517.1   299     0   424        1    Okawaru Orcish Mines:1 a cyclops
+    295   DEATH   24404  12   15847    66  240.1   358     0   561        1    Okawaru Orcish Mines:1 an orc warrior
+     63   DEATH   24278  12   12959    27  480.0   283     0              1    Okawaru Orcish Mines:2 divine providence
+    238    QUIT   24062  12   30000   105  285.7   323     0   324        1    Okawaru    Dungeon:9 (quit)
+    256   DEATH   23986  12   14418    24  600.8   298     0   355        1    Okawaru Lair of Beasts:1 a death yak
+    207   DEATH   23512  12   11206    28  400.2   327     0   259        1    Okawaru Orcish Mines:1 a kobold blastminer
+    297    QUIT   23436  12   11700    33  354.5   250     0   675        1    Okawaru            ? (quit)
+    202   DEATH   23071  12   15711    34  462.1   315     0              1    Okawaru Lair of Beasts:3 a lindwurm
+     46   DEATH   22066  12   13057    21  621.8   348     0   310        1    Okawaru Orcish Mines:1 a chaos spawn
+     53   DEATH   21751  12   10046    25  401.8   339     0              1    Okawaru Orcish Mines:1 Erica
+     24   DEATH   21501  12   14158    25  566.3   308     0   143        1    Okawaru Orcish Mines:2 Jorgrun
+     72   DEATH   21486  12   12892    25  515.7   271     0   391        1    Okawaru   Dungeon:11 a deep elf zephyrmancer
+     82   DEATH   21469  12   12178    24  507.4   327     0    99        1    Okawaru Orcish Mines:2 an ettin
+     38    QUIT   21265  12   30000   115  260.9   319     0  1937        1    Okawaru Lair of Beasts:1 (quit)
+    101   DEATH   21044  12   10567    33  320.2   347     0              1    Okawaru            ? a minotaur
+     77   DEATH   19570  12   11540    35  329.7   281     0   414        1    Okawaru      Abyss:1 a lich
+    189    QUIT   19565  12   29623   116  255.4   302     0          1   1    Okawaru Lair of Beasts:1 (quit)
+    227   DEATH   19470  12   13158    24  548.2   301     0   847        1    Okawaru   Dungeon:10 a yak
+     32    QUIT   18971  12   30000   189  158.7   287     0   580        1    Okawaru    Dungeon:9 (quit)
+    264    QUIT   18942  12   30000   136  220.6   362     0   389        1    Okawaru Lair of Beasts:2 (quit)
+      9   DEATH   18643  12   11426    21  544.1   275     0    78        1    Okawaru            ? a rust devil
+    191    QUIT   18375  12    9200    27  340.7   248     0              1    Okawaru            ? (quit)
+    111   DEATH   18067  12    9109    21  433.8   258     0   397        1    Okawaru Lair of Beasts:2 a swamp dragon
+    132    QUIT   17647  12   30000   141  212.8   288     0   267        1    Okawaru Lair of Beasts:2 (quit)
+    281   DEATH   17490  12   11999    22  545.4   297     0   259        1    Okawaru   Dungeon:11 a deep elf zephyrmancer
+    118   DEATH   17416  12    9659    22  439.0   291     0   407        1    Okawaru Orcish Mines:1 an ettin
+     76    QUIT   16856  12   30000   132  227.3   310     0              1    Okawaru Lair of Beasts:2 (quit)
+    183   DEATH   16806  12    9372    20  468.6   311     0   394        1 Gold:   50 Orcish Mines:2 a sixfirhy
+    244   DEATH   16755  12   10505    21  500.2   239     0   875        1    Okawaru Orcish Mines:2 an ogre
+    225   DEATH   16690  12   12027    21  572.7   279     0              1    Okawaru Lair of Beasts:2 a naga
+    253    QUIT   16608  12   30000   110  272.7   282     0    58        1    Okawaru   Dungeon:10 (quit)
+    188   DEATH   16473  12   13935    26  536.0   285     0   280        1    Okawaru Lair of Beasts:2 a lindwurm
+     16    QUIT   16108  12   13000    41  317.1   222     0              1    Okawaru            ? (quit)
+    222   DEATH   15875  12    9701    21  462.0   296     0              1    Okawaru            ? a molten gargoyle
+    221   DEATH   15759  12    9800    20  490.0   312     0              1    Okawaru Lair of Beasts:2 a 19-headed hydra
+    156   DEATH   15256  11   11229    21  534.7   258     0   899        1    Okawaru      Abyss:1 a sixfirhy
+    107   DEATH   14422  11   10334    20  516.7   223     0              1    Okawaru    Dungeon:9 an orange demon
+    112   DEATH   14366  11   10583    20  529.1   310     0   873        1    Okawaru Orcish Mines:2 divine providence
+     33   DEATH   14102  11   11668    24  486.2   319     0              1    Okawaru   Dungeon:12 an orc priest
+    141   DEATH   14095  11   11974    21  570.2   285     0   379        1    Okawaru Lair of Beasts:2 
+    232   DEATH   14053  11   10563    24  440.1   294     0   440        1    Okawaru Orcish Mines:2 divine providence
+    104   DEATH   13939  11   10125    18  562.5   288     0   189        1 Gold:   76 Orcish Mines:1 a kobold blastminer
+    171   DEATH   13497  11   12475    21  594.0   238     0              1    Okawaru Orcish Mines:2 an orc knight
+    198   DEATH   13325  11    8898    18  494.3   268     0              1    Okawaru Lair of Beasts:2 an electric eel
+    106   DEATH   13274  11   11371    24  473.8   317     0   359        1    Okawaru Orcish Mines:2 an orc knight
+     67   DEATH   12999  11    9713    21  462.5   321     0    48        1    Okawaru Orcish Mines:2 a warg
+    192   DEATH   12867  11    9795    21  466.4   272     0   482        1    Okawaru Orcish Mines:1 Jorgrun
+    205   DEATH   12547  11    9726    19  511.9   313     0   337        1    Okawaru Orcish Mines:2 a kobold blastminer
+    300   DEATH   12072  11    9322    16  582.6   253     0   305        1    Okawaru Lair of Beasts:2 an elephant
+    294   DEATH   11603  11    7875    18  437.5   248     0              1    Okawaru Lair of Beasts:1 a komodo dragon
+     11   DEATH   11239  11    9284    17  546.1   279     0   611        1    Okawaru Orcish Mines:1 divine providence
+    226   DEATH   11188  11   27344   184  148.6   254     0              1    Okawaru    Dungeon:9 a centaur warrior
+     94   DEATH   10873  11   10699    17  629.4   290     0   600        1    Okawaru Orcish Mines:1 
+     43   DEATH   10297  11   10327    17  607.5   236     0   636        1    Okawaru Orcish Mines:2 a deep elf zephyrmancer
+    152   DEATH   10280  11    7401    12  616.8   191     0              1    Okawaru Lair of Beasts:2 a yak
+    229   DEATH   10199  11   10541    16  658.8   236     0              1    Okawaru Lair of Beasts:2 a cane toad
+    208   DEATH   10073  11    8325    17  489.7   277     0   275        1    Okawaru Orcish Mines:2 an orc warrior
+     27   DEATH    9942  11    9653    20  482.6   313     0    49        1    Okawaru Orcish Mines:2 a kobold blastminer
+     51   DEATH    9708  11    8088    18  449.3   209     0   231        1    Okawaru Lair of Beasts:1 an oklob plant
+    127   DEATH    9676  11    7510    14  536.4   220     0   585        1    Okawaru   Dungeon:11 a two-headed ogre
+    251   DEATH    9347  11    8016    15  534.4   226     0              1    Okawaru Orcish Mines:2 a kobold blastminer
+     49   DEATH    9095  11    7261    15  484.1   209     0   345        1    Okawaru Lair of Beasts:1 
+     17   DEATH    9051  11    8742    19  460.1   233     0   449        1    Okawaru Orcish Mines:1 an orc warrior
+    210   DEATH    9034  11    9806    17  576.8   203     0   357        1    Okawaru Lair of Beasts:1 Grum
+    119   DEATH    9018  11    9316    17  548.0   275     0    50        1    Okawaru   Dungeon:10 an orc priest
+     14   DEATH    8999  11    8525    15  568.3   250     0   324        1    Okawaru    Dungeon:9 a cyclops
+    239   DEATH    8894  11    8543    14  610.2   227     0              1    Okawaru Orcish Mines:2 an orc warlord
+    145   DEATH    8284  11    8652    17  508.9   255     0   434        1 Gold:   12 Orcish Mines:2 a kobold blastminer
+    181   DEATH    8260  11    8431    17  495.9   257     0   318        1    Okawaru Lair of Beasts:1 a komodo dragon
+     88   DEATH    8117  11    9958    17  585.8   239     0              1    Okawaru Orcish Mines:1 an orc warlord
+    178   DEATH    7039  10    8915    16  557.2   260     0   393        1    Okawaru Orcish Mines:1 Sonja
+     98    QUIT    6958  10    9100    44  206.8   222     0   264        1    Okawaru Lair of Beasts:1 (quit)
+    266   DEATH    6608  10    9648    15  643.2   237     0              1    Okawaru Lair of Beasts:1 a komodo dragon
+     85   DEATH    6591  10    8229    14  587.8   229     0    81        1    Okawaru    Dungeon:9 an orc knight
+     56   DEATH    6216  10    7631    17  448.9   180     0   180        1    Okawaru            ? a swamp worm
+     34   DEATH    6099  10    8960    16  560.0   187     0   432        1 Gold:   96    Dungeon:9 a centaur warrior
+    117   DEATH    6000  10    8723    11  793.0   194     0    63        1    Okawaru   Dungeon:10 a sun demon
+     37   DEATH    5819  10    7940    14  567.1   210     0              1    Okawaru    Dungeon:9 a gnoll
+    176   DEATH    5352  10    8886    18  493.7   174     0    80        1    Okawaru    Dungeon:8 
+    169    QUIT    5310  10    9700    26  373.1   214     0   559        1    Okawaru    Dungeon:8 (quit)
+     75   DEATH    5201  10    6247     9  694.1   167     0   252        1    Okawaru    Dungeon:9 a cyan ugly thing
+    109   DEATH    5041  10    7959    13  612.2   182     0   382        1    Okawaru    Dungeon:8 divine providence
+    155   DEATH    4992  10    6252    10  625.2   197     0   365        1    Okawaru    Dungeon:8 a two-headed ogre
+    147   DEATH    4969  10    6554    11  595.8   185     0   280        1 Gold:   14 Orcish Mines:1 a two-headed ogre
+    162   DEATH    4943  10    6538    13  502.9   200     0   182          Gold:   21    Dungeon:8 an eight-headed hydra
+    185   DEATH    4932  10    8227    12  685.6   217     0   224        1    Okawaru   Dungeon:11 an eight-headed hydra
+    259   DEATH    4437  10    7643    11  694.8   187     0   275        1    Okawaru    Dungeon:8 Maggie
+     44   DEATH    4431  10    7453    12  621.1   157     0   267        1    Okawaru    Dungeon:8 
+     86   DEATH    4162  10    7673    12  639.4   188     0   168        1    Okawaru    Dungeon:8 an electric eel
+     12   DEATH    3801   9    6119    11  556.3   179     0   131          Gold:   27    Dungeon:7 nerve-wracking pain
+    102   DEATH    3514   9    7238    13  556.8   187     0              1    Okawaru    Dungeon:8 Erica
+     29   DEATH    3465   9    7383    11  671.2   194     0              1    Okawaru    Dungeon:8 
+    184   DEATH    3138   9    6804    10  680.4   175     0              1    Okawaru    Dungeon:8 a death yak
+    277   DEATH    3107   9    7364    10  736.4   155     0    97        1    Okawaru    Dungeon:7 an electric eel
+    263   DEATH    2748   9    6198    10  619.8   148     0              1    Okawaru    Dungeon:8 a yak
+    186   DEATH    2681   9    6222     8  777.8   159     0   137          Gold: 206     Dungeon:7 a kobold brigand
+    122   DEATH    2625   9    7026    10  702.6   149     0   265        1    Okawaru    Dungeon:8 
+     91   DEATH    2469   9    5871     9  652.3   152     0              1    Okawaru    Dungeon:8 a gnoll sergeant
+    134   DEATH    2276   9    5123     8  640.4   141     0              1    Okawaru    Dungeon:7 Jeremiah
+     35   DEATH    2258   9    7176    12  598.0   185     0                Gold:   0     Dungeon:7 Maurice
+    177   DEATH    2158   9    5364    11  487.6   133     0   121          Gold:   19    Dungeon:6 an orc warrior
+    265   DEATH    2141   9    5903    11  536.6   148     0   429          Gold:   15    Dungeon:7 a juvenile firebat beast
+    241   DEATH    2137   9    4950    11  450.0   145     0   220          Gold: 153     Dungeon:6 divine providence
+     66   DEATH    2128   9    5773    10  577.3   168     0                Gold:   0     Dungeon:7 Maurice
+    160    QUIT    1984   9    7100    36  197.2   134     0                Gold:   20   Dungeon:10 (quit)
+     99   DEATH    1977   9    5021     8  627.6   107     0   168          Gold: 70      Dungeon:6 divine providence
+    113   DEATH    1943   8    5702     8  712.8   138     0              1    Okawaru    Dungeon:7 a wight
+    236   DEATH    1840   8    4918     8  614.8   124     0    56        1    Okawaru    Dungeon:7 an unseen horror
+    139   DEATH    1799   8    4458     6  743.0   101     0   238          Gold:   69    Dungeon:7 divine providence
+    148   DEATH    1714   8    3976     7  568.0   124     0                Gold:   34    Dungeon:5 a steam dragon
+    288   DEATH    1708   8    6390     8  798.8   148     0    54          Gold:   28    Dungeon:7 Maurice
+    212   DEATH    1682   8    4564     6  760.7   112     0                Gold:   23    Dungeon:6 an orc
+    254   DEATH    1676   8    4865     6  810.8   124     0              1    Okawaru            ? 
+    164   DEATH    1602   8    5204     8  650.5   141     0                Gold:   25    Dungeon:6 a gnoll
+    125   DEATH    1560   8    4463     8  557.9   104     0    52          Gold:   24    Dungeon:6 a gnoll
+    261   DEATH    1501   8    3966     6  661.0   160     0                Gold:   18    Dungeon:5 a jelly
+    103   DEATH    1497   8    5649    12  470.8    96     0   132          Gold:   11    Dungeon:5 
+    216   DEATH    1489   8    4037     6  672.8    93     0                Gold:   27    Dungeon:6 
+    269   DEATH    1469   8    5600     9  622.2   142     0              1    Okawaru    Dungeon:6 Maggie
+    201    QUIT    1446   8   27278   492   55.4   115     0   190    1     Gold:   97    Dungeon:6 (quit)
+    283   DEATH    1412   8    4780     9  531.1   114     0   120          Gold:   88    Dungeon:6 a steam dragon
+    218   DEATH    1338   8    4405     5  881.0    89     0              1    Okawaru    Dungeon:6 a wight
+    158   DEATH    1318   8    3930     7  561.4   107     0                Gold:   25    Dungeon:5 a white imp
+    130   DEATH    1281   8    5045     8  630.6   100     0   195        1    Okawaru    Dungeon:6 a centaur
+     90   DEATH    1256   8    4437     8  554.6   130     0              1    Okawaru    Dungeon:5 a gnoll
+    159   DEATH    1198   8    4434     6  739.0   100     0   249        1    Okawaru    Dungeon:7 a troll
+    290   DEATH    1166   8    4017     7  573.9   100     0                Gold:   24    Dungeon:7 a cyclops
+    163   DEATH    1110   8    5514     8  689.2   115     0   121        1    Okawaru    Dungeon:6 an orc warrior
+    211   DEATH    1021   8    5912    11  537.5   110     0  1114          Gold:   76    Dungeon:7 a vampire
+    296   DEATH     998   8    2848     4  712.0    89     0   143          Gold:   13    Dungeon:7 a killer bee
+    124   DEATH     978   7    4318     7  616.9   109     0   112          Gold:   69    Dungeon:6 a soul eater
+    272   DEATH     957   7    4973     7  710.4   115     0              1    Okawaru    Dungeon:6 a wyvern
+    275   DEATH     956   7    4573     6  762.2   101     0   148        1    Okawaru    Dungeon:6 Duvessa
+     40   DEATH     935   7    3647     6  607.8   101     0                Gold:   20    Dungeon:5 
+     50   DEATH     933   7    3792     6  632.0   123     0                Gold:   32    Dungeon:5 a gnoll
+     19   DEATH     870   7    5016     6  836.0    88     0    99          Gold: 174     Dungeon:5 a wight
+     92   DEATH     863   7    3157     5  631.4    73     0                Gold: 270     Dungeon:4 a wight
+    143   DEATH     862   7    3922     6  653.7    99     0              1    Okawaru    Dungeon:5 an orc wizard
+     55    QUIT     847   7   27588   347   79.5    88     0   202    1     Gold:   67    Dungeon:5 (quit)
+    165   DEATH     844   7    5129     6  854.8   112     0                Gold:   19    Dungeon:6 a two-headed ogre
+     20   DEATH     837   7    3589     5  717.8    97     0              1    Okawaru    Dungeon:6 
+    233   DEATH     821   7    3643     5  728.6   104     0              1    Okawaru    Dungeon:5 Blorkula the Orcula
+    174   DEATH     791   7    4691     4 1172.8    88     0                Gold:   20    Dungeon:6 an orc warrior
+     13   DEATH     781   7    2948     5  589.6    91     0                Gold:   28    Dungeon:5 
+     21   DEATH     762   7    3642     4  910.5    91     0                Gold:   19    Dungeon:5 an ogre
+    249    QUIT     746   7    6300    22  286.4    79     0    52        1    Okawaru            ? (quit)
+    248   DEATH     741   7    3482     4  870.5    98     0                Gold:   28    Dungeon:4 a gnoll
+     89   DEATH     735   7    3468     5  693.6   100     0    42          Gold:   10    Dungeon:4 
+     87   DEATH     735   7    3610     4  902.5    82     0              1    Okawaru    Dungeon:5 a jelly's acid
+    262   DEATH     705   7    3346     4  836.5   105     0                Gold:   14    Dungeon:5 Pikel
+     78   DEATH     690   7    4224     6  704.0   103     0   181          Gold:   49    Dungeon:5 a gnoll
+    150   DEATH     648   7    4536     5  907.2   106     0                Gold:   46    Dungeon:6 a gnoll
+    133   DEATH     632   7    4280     5  856.0   112     0                Gold:   48    Dungeon:5 Sigmund
+    274   DEATH     612   7    3432     5  686.4    99     0   140                   -    Dungeon:5 an ogre
+     95   DEATH     606   7    3158     4  789.5   114     0                Gold:   16    Dungeon:4 Sigmund
+    220   DEATH     581   7    3500     4  875.0    65     0                Gold:   14    Dungeon:4 
+    278   DEATH     561   7    3432     5  686.4    86     0   112          Gold:   51    Dungeon:5 an orc wizard
+     80   DEATH     555   7    2761     5  552.2   128     0                Gold:   11    Dungeon:4 a hobgoblin
+     70   DEATH     550   7    4190     5  838.0    97     0   175        1    Okawaru    Dungeon:5 a gnoll
+    166   DEATH     546   7    2562     4  640.5    68     0                Gold:   23    Dungeon:4 a lemure
+    120   DEATH     539   7    4156     5  831.2    92     0                Gold:   28    Dungeon:5 a gnoll sergeant
+    194   DEATH     512   6    3276     4  819.0    84     0                Gold:   21    Dungeon:4 Duvessa
+    137   DEATH     487   6    2570     3  856.7    67     0                Gold:   98    Dungeon:5 Sigmund
+    173   DEATH     460   6    4393     7  627.6    94     0    72          Gold:   94    Dungeon:4 an orc warrior
+    215   DEATH     440   6    2387     3  795.7    66     0                Gold:   87            ? 
+    170   DEATH     429   6    3019     4  754.8    81     0              1    Okawaru    Dungeon:5 
+    123   DEATH     424   6    3113     4  778.2   111     0                Gold:   16    Dungeon:4 an ogre
+     30   DEATH     421   6    3487     4  871.8    73     0                Gold:   27    Dungeon:4 divine providence
+     84   DEATH     414   6    3196     4  799.0    82     0                Gold:   19    Dungeon:5 an ogre
+    167   DEATH     381   6    3466     4  866.5    78     0                Gold:   22    Dungeon:4 Sigmund
+     54   DEATH     375   6    3173     3 1057.7    68     0                Gold:   14    Dungeon:4 an ogre
+     61   DEATH     370   6    2934     6  489.0    87     0    81          Gold:   41    Dungeon:4 Duvessa
+    114   DEATH     361   6    2609     4  652.2    88     0                Gold:   12    Dungeon:4 a wyvern
+    110   DEATH     357   6    2763     4  690.8    54     0   153          Gold:   10    Dungeon:4 an orc wizard
+    161   DEATH     353   6    2358     4  589.5    83     0                Gold:   20    Dungeon:4 a gnoll sergeant
+      6   DEATH     351   6    3054     5  610.8    94     0                Gold:   29    Dungeon:4 Duvessa
+      1   DEATH     336   6    2720     3  906.7    81     0    84          Gold:   31    Dungeon:4 nerve-wracking pain
+    128   DEATH     329   6    2599     3  866.3    64     0                Gold:   18    Dungeon:5 divine providence
+    149   DEATH     323   6    2981     4  745.2    80     0              1    Okawaru    Dungeon:4 Duvessa
+    280   DEATH     315   6    2595     3  865.0    63     0                Gold:   97    Dungeon:3 
+     96   DEATH     305   6    2164     3  721.3    74     0              1    Okawaru    Dungeon:4 Menkaure
+     18   DEATH     296   6    2946     5  589.2    92     0                Gold:   23    Dungeon:4 an ogre
+    271   DEATH     282   6    2406     5  481.2    84     0                Gold:   19    Dungeon:4 an orc warrior
+     64   DEATH     270   6    2862     4  715.5    77     0    90          Gold:   74    Dungeon:4 Duvessa
+    286   DEATH     246   5    2442     4  610.5    79     0   121          Gold:   4     Dungeon:4 
+    246   DEATH     242   5    2225     3  741.7    64     0                Gold:   19    Dungeon:3 
+    193   DEATH     239   5    2945     4  736.2    81     0                Gold:   16    Dungeon:4 Duvessa
+     62   DEATH     238   5    2745     5  549.0    84     0                Gold:   12      Abyss:1 a large abomination
+    199   DEATH     232   5    2941     8  367.6    93     0                Gold:   15    Dungeon:4 a gnoll
+      7   DEATH     223   5    2340     4  585.0    96     0                Gold:   17    Dungeon:4 a quasit
+    299   DEATH     211   5    2111     3  703.7    56     0                Gold:   12    Dungeon:4 
+      8   DEATH     205   5    2628     4  657.0    67     0                Gold:   28    Dungeon:4 an orc wizard
+    138   DEATH     199   5    1842     2  921.0    62     0                Gold:   89    Dungeon:3 Ijyb
+    268   DEATH     162   5    2329     3  776.3    82     0                Gold:   15    Dungeon:4 nerve-wracking pain
+    190   DEATH     151   5    2517     3  839.0    56     0                Gold:   18    Dungeon:3 a black bear
+    157   DEATH     151   5    2358     2 1179.0    61     0                Gold:   14    Dungeon:5 a gnoll
+    250   DEATH     136   4    1700     2  850.0    62     0                Gold:   92    Dungeon:3 Grinder
+     93   DEATH     133   4    1683     2  841.5    58     0    65          Gold:   7     Dungeon:2 a gnoll
+    292   DEATH     130   4    2085     2 1042.5    58     0                Gold:   11    Dungeon:3 
+    224   DEATH     126   4    2405     3  801.7    56     0                Gold:   12    Dungeon:3 an iguana
+    204   DEATH     126   4    3044     4  761.0    52     0   103          Gold:   29    Dungeon:4 Duvessa
+    100   DEATH     126   4    1285     2  642.5    51     0                Gold:   70    Dungeon:2 Sigmund
+     81   DEATH     118   4    1879     2  939.5    62     0    80          Gold:   45    Dungeon:3 Sigmund
+    213   DEATH     109   4    1820     3  606.7    54     0                Gold:   79    Dungeon:3 Sigmund
+     97   DEATH     107   4    2140     3  713.3    39     0                Gold:   56    Dungeon:3 an orc wizard
+    243   DEATH     104   4    2669     3  889.7    44     0                         -    Dungeon:4 an ogre
+     25   DEATH      91   4    1853     3  617.7    55     0                Gold:   62    Dungeon:3 an orc
+     52   DEATH      86   4    1522     2  761.0    51     0                Gold:   13    Dungeon:3 a +2 spectral club
+     71   DEATH      85   4    1712     2  856.0    60     0                Gold:   14    Dungeon:3 
+    209   DEATH      84   4    1616     1 1616.0    47     0                Gold:   87    Dungeon:3 an orc wizard
+    153   DEATH      83   4    1149     2  574.5    37     0                Gold:   34    Dungeon:2 a gnoll
+    146   DEATH      80   4    2223     3  741.0    53     0    52          Gold:   12    Dungeon:4 a black bear
+    108   DEATH      70   4    2488     2 1244.0    36     0                Gold:   21    Dungeon:4 a black bear
+    242   DEATH      65   3    1496     2  748.0    46     0                Gold:   16    Dungeon:3 a centaur
+    105   DEATH      65   3    1819     1 1819.0    42     0                Gold:   83    Dungeon:3 Ijyb
+    287   DEATH      62   3    1241     1 1241.0    39     0                Gold:   65    Dungeon:2 a gnoll
+    298   DEATH      60   3     752     1  752.0    37     0                Gold:   57    Dungeon:2 a gnoll
+     36   DEATH      59   3    1553     2  776.5    49     0                Gold:   10    Dungeon:3 Sigmund
+    270   DEATH      58   3    1862     1 1862.0    41     0                Gold:   77    Dungeon:2 an ogre
+    279   DEATH      56   3    1496     1 1496.0    36     0                Gold:   12    Dungeon:3 Grinder
+    195   DEATH      56   3    1100     1 1100.0    36     0   128          Gold:   11    Dungeon:3 
+    168   DEATH      56   3    1628     1 1628.0    37     0                Gold:   97    Dungeon:3 a steam dragon
+     47   DEATH      55   3     918     1  918.0    25     0                Gold:   64    Dungeon:2 a gnoll
+     31   DEATH      53   3    1722     1 1722.0    40     0                Gold:   12    Dungeon:3 Ijyb
+    219   DEATH      50   3     740     1  740.0    32     0                Gold:   71    Dungeon:2 
+    116   DEATH      49   3     713     0           27     0                Gold:   14    Dungeon:2 a gnoll
+     79   DEATH      49   3    1392     1 1392.0    43     0                Gold:   14    Dungeon:2 an orc wizard
+    136   DEATH      46   3    1238     2  619.0    26     0                Gold:   65    Dungeon:2 Robin
+     41   DEATH      37   3     757     1  757.0    30     0                Gold:   13    Dungeon:2 a gnoll
+    121   DEATH      35   3    1119     1 1119.0    23     0                Gold:   32    Dungeon:2 Jessica
+     65   DEATH      35   3     831     1  831.0    27     0                Gold:   40    Dungeon:2 divine providence
+    142   DEATH      34   3    1133     1 1133.0    22     0              1 Gold:   93    Dungeon:4 Pikel
+      2   DEATH      30   3    1003     1 1003.0    20     0                Gold:   44    Dungeon:2 a gnoll
+    151   DEATH      25   2    1149     1 1149.0    22     0                Gold:   15    Dungeon:3 divine providence
+    187   DEATH      22   2     638     1  638.0    20     0                Gold:   32    Dungeon:2 a gnoll
+     22   DEATH      21   2     943     0           18     0    46                   -    Dungeon:2 Sigmund
+    214   DEATH      18   2     141     0           15     0                Gold:   16    Dungeon:1 a quokka
+     48   DEATH      18   2     585     1  585.0    18     0                Gold:   37    Dungeon:2 Sigmund
+      4   DEATH      16   2     567     0           14     0                Gold:   46    Dungeon:2 a gnoll
+    154   DEATH      15   2     710     1  710.0    13     0                         -    Dungeon:2 Sigmund
+    260   DEATH       2   1      70     0            2     0                Gold:   0     Dungeon:1 
+     39   DEATH       0   1      11     0            ?     0                         -    Dungeon:1 a gnoll
+

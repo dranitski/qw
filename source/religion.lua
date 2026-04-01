@@ -483,10 +483,19 @@ function update_altar(god, level, hash, state, force)
     end
 
     local current = c_persist.altars[god][level][hash]
-    if not current then
+    local is_new = not current
+    if is_new then
         current = {}
         cleanup_feature_state(current)
         c_persist.altars[god][level][hash] = current
+
+        -- Log altar discovery with whether it's in our god list
+        local dominated = util.contains(god_options(), god)
+        note_decision("ALTAR", god .. " altar found on " .. level
+            .. " (" .. (dominated and "WANTED" or "other") .. ")")
+        if dominated then
+            qw.stats.wanted_altars = qw.stats.wanted_altars + 1
+        end
     end
 
     if state.safe == nil then
@@ -508,7 +517,7 @@ function update_altar(god, level, hash, state, force)
     end
 
     if debug_channel("map") then
-        dsay("Updating altar on " .. level .. " at "
+        note_decision("RELIGION", "Updating altar on " .. level .. " at "
             .. cell_string_from_map_position(unhash_position(hash))
             .. " from " .. stairs_state_string(current)
             .. " to " .. stairs_state_string(state))

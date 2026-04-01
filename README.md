@@ -85,10 +85,9 @@ the lua. This is `# include = qw.lua` by default.
 Enter a name if necessary and start a game. If you didn't change the
 `AUTO_START` variable, the "Tab" key will start and stop qw.
 
-The file [qw.exp](qw.exp) is a simple expect script that automates running qw
-for many games in a row. The `AUTO_START` variable should be left at false when
-when using this. (With minor modifications, this can also be used to run games
-on a remote server over ssh.)
+For automated batch runs, use `claude/run-parallel.py` which runs multiple games
+in parallel with health monitoring and real-time limits. See
+`claude/run-parallel.md` for details.
 
 ### Running on a WebTiles or dgamelaunch server
 

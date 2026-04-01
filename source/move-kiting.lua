@@ -26,7 +26,7 @@ function enemy_allows_kiting(enemy, attack_delay, move_delay)
     if enemy:is_ranged(true) or enemy:los_danger() then
         if debug_channel("kite") then
             local props = { los_danger = "los danger", is_ranged = "ranged" }
-            dsay("Unable to kite due to LOS danger or ranged: "
+            note_decision("KITING", "Unable to kite due to LOS danger or ranged: "
                 .. monster_string(enemy, props))
         end
 
@@ -40,7 +40,7 @@ function enemy_allows_kiting(enemy, attack_delay, move_delay)
     if enemy:move_delay() <= move_delay then
         if debug_channel("kite") then
             local props = { move_delay = "move delay" }
-            dsay("Unable to kite because we are not faster than nearby"
+            note_decision("KITING", "Unable to kite because we are not faster than nearby"
                 .. " monster: " .. monster_string(enemy, props))
         end
 
@@ -51,7 +51,7 @@ function enemy_allows_kiting(enemy, attack_delay, move_delay)
     if moves_needed > 6 then
         if debug_channel("kite") then
             local props = { move_delay = "move delay" }
-            dsay("Unable to kite since nearby monster requires too many moves"
+            note_decision("KITING", "Unable to kite since nearby monster requires too many moves"
                 .. " to gain distance (" .. tostring(moves_needed) .. "): "
                 .. monster_string(enemy, props))
         end
@@ -97,7 +97,7 @@ function want_to_kite()
     local move_delay = player_move_delay()
 
     if debug_channel("kite") then
-        dsay("Evaluating kiting with attack delay " .. tostring(attack_delay)
+        note_decision("KITING", "Evaluating kiting with attack delay " .. tostring(attack_delay)
             .. " and move delay " .. tostring(move_delay))
     end
 
@@ -105,7 +105,7 @@ function want_to_kite()
         if debug_channel("kite-all") then
             local props = { los_danger = "los danger", is_ranged = "ranged",
                 reach_range = "reach", move_delay = "move delay" }
-            dsay("Evaluating " .. monster_string(enemy, props))
+            note_decision("KITING", "Evaluating " .. monster_string(enemy, props))
         end
 
         if not enemy_allows_kiting(enemy, attack_delay, move_delay) then
@@ -119,7 +119,7 @@ function want_to_kite()
             if debug_channel("kite") then
                 local props = { reach_range = "reach",
                     move_delay = "move delay" }
-                dsay("Want a kiting step due to nearby "
+                note_decision("KITING", "Want a kiting step due to nearby "
                     .. monster_string(enemy, props))
             end
 
@@ -153,12 +153,12 @@ function assess_kiting_enemy_at(pos, enemy, player_search)
 
     if debug_channel("kite-all") then
         local props = { reach_range = "reach", move_delay = "move delay" }
-        dsay("Assessing " .. monster_string(enemy, props))
+        note_decision("KITING", "Assessing " .. monster_string(enemy, props))
     end
 
     if not enemy:has_path_to_melee_player() then
         if debug_channel("kite-all") then
-            dsay("Ignoring enemy: no path to melee player")
+            note_decision("KITING", "Ignoring enemy: no path to melee player")
         end
 
         return result
@@ -167,7 +167,7 @@ function assess_kiting_enemy_at(pos, enemy, player_search)
     local enemy_move_dist = enemy:melee_move_distance(pos)
     if enemy:can_seek(true) and enemy_move_dist == const.inf_dist then
         if debug_channel("kite-all") then
-            dsay("Position rejected: " .. enemy:name()
+            note_decision("KITING", "Position rejected: " .. enemy:name()
                 .. " can't reach this position")
         end
 
@@ -181,7 +181,7 @@ function assess_kiting_enemy_at(pos, enemy, player_search)
     local min_gain = math.ceil(attack_delay / enemy:move_delay())
 
     if debug_channel("kite-all") then
-        dsay(enemy:name() .. " at " .. pos_string(enemy:pos())
+        note_decision("KITING", enemy:name() .. " at " .. pos_string(enemy:pos())
             .. " has move distance " .. tostring(enemy_move_dist)
             .. " and a distance gain of " .. tostring(gained_dist)
             .. " and needs a distance gain of at least "
@@ -190,7 +190,7 @@ function assess_kiting_enemy_at(pos, enemy, player_search)
 
     if gained_dist < min_gain then
         if debug_channel("kite-all") then
-            dsay("Position rejected: distance gain of " .. enemy:name()
+            note_decision("KITING", "Position rejected: distance gain of " .. enemy:name()
                 .. " below minimum required")
         end
 
@@ -241,7 +241,7 @@ function assess_kiting_destination(pos)
     end
 
     if debug_channel("kite-all") then
-        dsay("Assessing kiting destination " .. cell_string_from_position(pos)
+        note_decision("KITING", "Assessing kiting destination " .. cell_string_from_position(pos)
             .. " with move distance " .. tostring(search.dist))
     end
 
@@ -260,7 +260,7 @@ function assess_kiting_destination(pos)
     end
 
     if debug_channel("kite-all") then
-        dsay("Destination has an avoidance score of "
+        note_decision("KITING", "Destination has an avoidance score of "
             .. tostring(result.avoid_score)
             .. ", a sight score of "
             .. tostring(result.see_score)
@@ -286,7 +286,7 @@ end
 
 function best_kiting_destination_func()
     if debug_channel("kite") then
-        dsay("Assessing kiting destinations with attack delay "
+        note_decision("KITING", "Assessing kiting destinations with attack delay "
             .. tostring(kiting_attack_delay()) .. " and move delay "
             .. tostring(player_move_delay()))
     end
@@ -301,7 +301,7 @@ function best_kiting_destination_func()
 
     if debug_channel("kite") then
         if best_result then
-            dsay("Found kiting destination at "
+            note_decision("KITING", "Found kiting destination at "
                 .. cell_string_from_position(best_result.pos)
                 .. " at distance " .. tostring(best_result.dist)
                 .. " with an avoidance score of "
@@ -311,7 +311,7 @@ function best_kiting_destination_func()
                 .. " and a distance score of "
                 .. tostring(best_result.dist_score))
         else
-            dsay("No kiting destination found")
+            note_decision("KITING", "No kiting destination found")
         end
     end
 

@@ -122,6 +122,11 @@ function plan_melee()
         return false
     end
 
+    if hp_is_low(50) then
+        note_decision("ATTACK", "Attacking " .. enemy:name()
+            .. " at low HP")
+    end
+
     if enemy:distance() == 1 then
         do_melee_attack(enemy:pos())
     else
@@ -152,10 +157,10 @@ function throw_missile(missile, pos, aim_at_target)
     if not cur_missile or missile.name() ~= cur_missile.name() then
         magic("Q*" .. item_letter(missile))
         qw.do_dummy_action = false
-        coroutine.yield()
+        qw_yield("action")
     end
 
-    return crawl.do_targeted_command("CMD_FIRE", pos.x, pos.y, aim_at_target)
+    return do_targeted_command("CMD_FIRE", pos.x, pos.y, aim_at_target)
 end
 
 function shoot_launcher(pos, aim_at_target)
@@ -164,10 +169,10 @@ function shoot_launcher(pos, aim_at_target)
     if not cur_missile or weapon.name() ~= cur_missile.name() then
         magic("Q*" .. item_letter(weapon))
         qw.do_dummy_action = false
-        coroutine.yield()
+        qw_yield("action")
     end
 
-    return crawl.do_targeted_command("CMD_FIRE", pos.x, pos.y, aim_at_target)
+    return do_targeted_command("CMD_FIRE", pos.x, pos.y, aim_at_target)
 end
 
 function plan_throw()
@@ -324,14 +329,12 @@ function evoke_targeted_item(item, pos, aim_at_target)
     if not cur_quiver or name ~= cur_quiver.name() then
         magic("Q*" .. item_letter(item))
         qw.do_dummy_action = false
-        coroutine.yield()
+        qw_yield("action")
     end
 
-    say("EVOKING " .. name .. " at " .. cell_string_from_position(pos) .. ".")
-    magic("fr" .. vector_move(pos) .. (aim_at_target and "." or "\r"))
-    -- Currently broken when no monsters are available for autotargeting.
-    -- return crawl.do_targeted_command("CMD_FIRE", pos.x, pos.y,
-    -- aim_at_target)
+    note_decision("ATTACK", "EVOKING " .. name .. " at " .. cell_string_from_position(pos) .. ".")
+    return do_targeted_command("CMD_FIRE", pos.x, pos.y,
+        aim_at_target)
 end
 
 function plan_targeted_evoke()
@@ -346,6 +349,7 @@ function plan_targeted_evoke()
 
     evoke_targeted_item(target.attack.items[1], target.pos,
         target.aim_at_target)
+    return true
 end
 
 function plan_flight_move_towards_enemy()
@@ -384,6 +388,7 @@ function plan_move_towards_enemy()
     if not qw.danger_in_los
             or using_ranged_weapon()
             or unable_to_move()
+            or hp_is_low(25)
             or dangerous_to_attack()
             or dangerous_to_move() then
         return false
@@ -428,6 +433,7 @@ function plan_continue_move_towards_enemy()
     if not qw.enemy_memory
             or not options.autopick_on
             or unable_to_move()
+            or hp_is_low(25)
             or dangerous_to_attack()
             or dangerous_to_move() then
         return false
@@ -476,7 +482,7 @@ end
 
 function random_step(reason)
     if you.mesmerised() then
-        say("Waiting to end mesmerise (" .. reason .. ").")
+        note_decision("ATTACK", "Waiting to end mesmerise (" .. reason .. ").")
         wait_one_turn()
         return true
     end
@@ -492,10 +498,10 @@ function random_step(reason)
         end
     end
     if count > 0 then
-        say("Stepping randomly (" .. reason .. ").")
+        note_decision("ATTACK", "Stepping randomly (" .. reason .. ").")
         return move_to(new_pos)
     else
-        say("Standing still (" .. reason .. ").")
+        note_decision("ATTACK", "Standing still (" .. reason .. ").")
         wait_one_turn()
         return true
     end
@@ -508,6 +514,68 @@ function plan_disturbance_random_step()
     return false
 end
 
+-- Proactive berserk: activate berserk when melee enemies are approaching
+-- (distance 2-3) and we can kill them all within the berserk window.
+-- This uses the full berserk duration for the fight instead of panic-
+-- berserking at low HP and dying during the cooldown.
+function plan_proactive_berserk()
+    if not qw.danger_in_los
+            or using_ranged_weapon()
+            or dangerous_to_melee()
+            or you.berserk() then
+        return false
+    end
+
+    if not can_berserk() or not can_kill_in_berserk() then
+        return false
+    end
+
+    -- Only trigger when enemies are close but not yet adjacent — we want
+    -- to berserk the turn before they engage so we fight at full strength.
+    local dominated_by_approaching = true
+    local have_approaching = false
+    for _, enemy in ipairs(qw.enemy_list) do
+        if enemy:distance() <= qw.los_radius then
+            -- If any enemy is ranged, don't wait — they'll shoot us.
+            if enemy:is_ranged() then
+                return false
+            end
+
+            if enemy:distance() <= 1 then
+                -- Enemy already adjacent: normally skip proactive berserk.
+                -- On D:1 (no upstairs), berserk even at melee range since
+                -- there's no retreat option.
+                if qw.can_flee_upstairs then
+                    dominated_by_approaching = false
+                else
+                    have_approaching = true
+                end
+            elseif enemy:distance() == 2 and enemy:has_path_to_melee_player() then
+                have_approaching = true
+            end
+        end
+    end
+
+    if not have_approaching or not dominated_by_approaching then
+        return false
+    end
+
+    -- Don't waste berserk on trivial fights we can win without it.
+    -- On D:1 (no upstairs), berserk more aggressively — it's our only edge.
+    local result = assess_enemies(const.duration.available, 2)
+    local min_threat = high_threat_level() * 0.5
+    if not qw.can_flee_upstairs then
+        min_threat = 1  -- berserk against anything scary on D:1
+    end
+    if result.threat < min_threat then
+        return false
+    end
+
+    note_decision("BERSERK", "Proactive berserk: enemies approaching, "
+        .. "can kill in berserk, threat=" .. tostring(result.threat))
+    return use_ability("Berserk")
+end
+
 function set_plan_attack()
     plans.attack = cascade {
         {plan_starting_spell, "starting_spell"},
@@ -517,6 +585,7 @@ function set_plan_attack()
         {plan_launcher, "launcher"},
         {plan_melee, "melee"},
         {plan_launcher_wait_for_enemy, "launcher_wait_for_enemy"},
+        {plan_proactive_berserk, "proactive_berserk"},
         {plan_melee_wait_for_enemy, "melee_wait_for_enemy"},
         {plan_continue_move_towards_enemy, "continue_move_towards_enemy"},
         {plan_move_towards_enemy, "move_towards_enemy"},

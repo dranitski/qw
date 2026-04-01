@@ -72,14 +72,14 @@ function search_from(search, pos, current, is_deviation)
     end
 
     if debug_channel("move-all") then
-        dsay("Checking " .. (is_deviation and "deviation " or "")
+        note_decision("MOVE", "Checking " .. (is_deviation and "deviation " or "")
             .. "move from " .. cell_string_from_position(current)
             .. " to " .. cell_string_from_position(pos))
     end
 
     if is_deviation and search.num_deviations >= 2 then
         if debug_channel("move-all") then
-            dsay("Too many deviation movements")
+            note_decision("MOVE", "Too many deviation movements")
         end
 
         return false
@@ -87,7 +87,7 @@ function search_from(search, pos, current, is_deviation)
 
     if position_distance(search.center, pos) > 2 * qw.los_radius then
         if debug_channel("move-all") then
-            dsay("Search traveled too far")
+            note_decision("MOVE", "Search traveled too far")
         end
 
         return false
@@ -100,7 +100,7 @@ function search_from(search, pos, current, is_deviation)
     if search.attempted[pos.x][pos.y]
             and search.attempted[pos.x][pos.y] <= search.num_deviations then
         if debug_channel("move-all") then
-            dsay("Not attempting previously failed search")
+            note_decision("MOVE", "Not attempting previously failed search")
         end
 
         return false
@@ -145,7 +145,7 @@ function search_from(search, pos, current, is_deviation)
     end
 
     if debug_channel("move-all") then
-        dsay("Square function failed")
+        note_decision("MOVE", "Square function failed")
     end
 
     return false
@@ -257,7 +257,7 @@ function move_search(center, target, square_func, min_dist)
     end
 
     if debug_channel("move-all") then
-        dsay("Move search from " .. cell_string_from_position(center)
+        note_decision("MOVE", "Move search from " .. cell_string_from_position(center)
             .. " to " .. cell_string_from_position(target))
     end
 
@@ -283,7 +283,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
         enemy_dist = const.inf_dist }
 
     if debug_channel("move-all") and map_is_traversable_at(to_pos) then
-        dsay("Checking " .. (use_unsafe and "unsafe" or "safe")
+        note_decision("MOVE", "Checking " .. (use_unsafe and "unsafe" or "safe")
             .. " move to " .. cell_string_from_map_position(to_pos))
     end
 
@@ -291,7 +291,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
     result.dist = map[to_pos.x][to_pos.y]
     if not result.dist then
         if debug_channel("move-all") and map_is_traversable_at(to_pos) then
-            dsay("No path to destination")
+            note_decision("MOVE", "No path to destination")
         end
 
         return
@@ -300,7 +300,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
     local current_dist = map[from_pos.x][from_pos.y]
     if current_dist and result.dist >= current_dist then
         if debug_channel("move-all") then
-            dsay("Distance of " .. tostring(result.dist)
+            note_decision("MOVE", "Distance of " .. tostring(result.dist)
                 .. " does not improve the starting position distance of "
                 .. tostring(current_dist))
         end
@@ -310,7 +310,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
 
     if best_result and result.dist > best_result.dist then
         if debug_channel("move-all") then
-            dsay("Distance of " .. tostring(result.dist)
+            note_decision("MOVE", "Distance of " .. tostring(result.dist)
                 .. " is worse than the current best distance of "
                 .. tostring(best_result.dist))
         end
@@ -321,7 +321,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
     local from_los_pos = position_difference(from_pos, qw.map_pos)
     if not can_move_to(to_los_pos, from_los_pos, use_unsafe) then
         if debug_channel("move-all") then
-            dsay("Can't move to position")
+            note_decision("MOVE", "Can't move to position")
         end
 
         return
@@ -354,7 +354,7 @@ function assess_move(to_pos, from_pos, dist_map, best_result, use_unsafe)
         result.unexcluded = map_is_unexcluded_at(to_pos) and 1 or 0
     elseif not is_safe_at(to_los_pos) then
         if debug_channel("move-all") then
-            dsay("Position is not safe")
+            note_decision("MOVE", "Position is not safe")
         end
 
         return
@@ -422,7 +422,7 @@ function best_move_towards(dest_pos, from_pos, allow_unsafe)
         else
             msg = msg .. " safe distance " .. tostring(current_safe_dist)
         end
-        dsay(msg)
+        note_decision("MOVE", msg)
     end
 
     if current_safe_dist == 0
@@ -513,7 +513,7 @@ end
 
 function best_move_towards_features(feats, allow_unsafe)
     if debug_channel("move") then
-        dsay("Determining best move towards feature(s): "
+        note_decision("MOVE", "Determining best move towards feature(s): "
             .. table.concat(feats, ", "))
     end
 
@@ -525,7 +525,7 @@ end
 
 function best_move_towards_items(item_names, allow_unsafe)
     if debug_channel("move") then
-        dsay("Determining best move towards item(s): "
+        note_decision("MOVE", "Determining best move towards item(s): "
             .. table.concat(item_names, ", "))
     end
 
@@ -558,7 +558,7 @@ end
 
 function best_move_towards_unexplored_near(map_pos, allow_unsafe)
     if debug_channel("move") then
-        dsay("Determining best move towards unexplored squares near "
+        note_decision("MOVE", "Determining best move towards unexplored squares near "
             .. cell_string_from_map_position(map_pos))
     end
 
@@ -566,13 +566,13 @@ function best_move_towards_unexplored_near(map_pos, allow_unsafe)
     for pos in radius_iter(map_pos, const.gxm) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Searched for unexplored in block " .. tostring(i / 1000)
+                note_decision("MOVE", "Searched for unexplored in block " .. tostring(i / 1000)
                     .. " of map positions near "
                     .. cell_string_from_map_position(map_pos))
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         if supdist(pos) <= const.gxm
@@ -604,19 +604,19 @@ end
 
 function best_move_towards_safety()
     if debug_channel("move") then
-        dsay("Determining best move towards safety")
+        note_decision("MOVE", "Determining best move towards safety")
     end
 
     local i = 1
     for pos in radius_iter(qw.map_pos, const.gxm) do
         if qw.coroutine_throttle and i % 1000 == 0 then
             if debug_channel("throttle") then
-                dsay("Searched for safety in block " .. tostring(i / 1000)
+                note_decision("MOVE", "Searched for safety in block " .. tostring(i / 1000)
                     .. " of map positions")
             end
 
             qw.throttle = true
-            coroutine.yield()
+            qw_yield("throttle")
         end
 
         local los_pos = position_difference(pos, qw.map_pos)
@@ -637,14 +637,18 @@ function update_move_destination()
     end
 
     local clear = false
-    if qw.move_reason == "goal" and qw.want_goal_update then
+    if qw.want_goal_update then
         clear = true
     elseif qw.move_reason == "monster" and have_target() then
+        clear = true
+    elseif qw.move_reason == "safety" and qw.position_is_safe then
         clear = true
     elseif positions_equal(qw.map_pos, qw.move_destination) then
         if qw.move_reason == "unexplored"
                 and autoexplored_level(where_branch, where_depth)
-                and qw.position_is_safe then
+                and qw.position_is_safe
+                and c_persist.autoexplore[where]
+                    ~= const.autoexplore.full then
             reset_autoexplore(where)
         end
 
@@ -653,7 +657,7 @@ function update_move_destination()
 
     if clear then
         if debug_channel("move") then
-            dsay("Clearing move destination "
+            note_decision("MOVE", "Clearing move destination "
                 .. cell_string_from_map_position(qw.move_destination))
         end
 
@@ -664,6 +668,7 @@ function update_move_destination()
 
         qw.move_destination = nil
         qw.move_reason = nil
+        qw.move_dest_start_turn = nil
     end
 end
 
@@ -689,12 +694,17 @@ function move_to(pos, cloud_waiting)
         end
     end
 
-    magic(delta_to_vi(pos) .. "YY")
+    magic(delta_to_vi(pos) .. "YY", "movement")
     return true
 end
 
 function move_towards_destination(pos, dest, reason)
     if move_to(pos) then
+        -- Reset stuck counter when destination changes
+        if not qw.move_destination
+                or not positions_equal(dest, qw.move_destination) then
+            qw.move_dest_start_turn = you.turns()
+        end
         qw.move_destination = dest
         qw.move_reason = reason
         return true
@@ -709,7 +719,7 @@ function distance_map_search_from(search, pos, current)
     end
 
     if debug_channel("move-all") then
-        dsay("Checking distance map move from "
+        note_decision("MOVE", "Checking distance map move from "
             .. cell_string_from_map_position(current)
             .. " to " .. cell_string_from_map_position(pos))
     end
@@ -719,9 +729,9 @@ function distance_map_search_from(search, pos, current)
     end
 
     local cache_result = search.cache[pos.x][pos.y]
-    if cache ~= nil then
+    if cache_result ~= nil then
         if debug_channel("move-all") then
-            dsay("Returning cached result for search")
+            note_decision("MOVE", "Returning cached result for search")
         end
 
         if cache_result then
@@ -762,7 +772,7 @@ function distance_map_search_from(search, pos, current)
     end
 
     if debug_channel("move-all") then
-        dsay("Square function failed")
+        note_decision("MOVE", "Square function failed")
     end
 
     search.cache[pos.x][pos.y] = false
@@ -803,7 +813,7 @@ function distance_map_search(center, target, square_func, min_dist,
     end
 
     if debug_channel("move-all") then
-        dsay("Distance map move search from "
+        note_decision("MOVE", "Distance map move search from "
             .. cell_string_from_map_position(center)
             .. " to " .. cell_string_from_map_position(target))
     end

@@ -138,53 +138,8 @@ These can be executed from the clua console.
 
 ## Batch runs of qw
 
-The scripts `util/run-qw.sh` and `util/batch-qw.sh` can be used to run qw a
-specific number of times and in parallel. These scripts aren't mature and might
-need modifications to fit your desired setup.
-
-### `run-qw.sh`
-
-Runs qw from the given crawl directory multiple times.
-
-#### Usage:
-```
-run-qw.sh  [-n <num>] [-d <dir>] [-r <file>] [-u <name>] [-t] <dir>
-```
-
-#### Arguments:
- * `<dir>`: The crawl directory. Must have a binary named `crawl` and any
-   necessary data files given the binary's build.
- * `-n <num>`: The number of games to play.
- * `-d <dir>`: The RC directory. Any include statements in the RC file will be
-   relative to this.
- * `-r <file>`: The RC fileto use.
- * `-u <name>`: The player name to use.
- * `-t`:  Create and update the file `<name>.count` with the number of
-   completed games. If the file already exists, resume the completed game count
-   from the number in the file.
-
-### `batch-qw.sh`
-
-Run qw via run-qw.sh in parallel instances from tmux of `run-qw.sh` in the
-given crawl directory.
-
-#### Usage:
-```
-batch-qw.sh [-i <num>] [-n <num>] [-b <name>] [-d <dir>] [-c] <dir>
-```
-
-#### Arguments:
- * `<dir>`: The crawl directory. Must have a binary named `crawl` and any
-   necessary data files given the binary's build.
- * `-i <num>`: The instances of `run-qw.sh` to run in parallel.
- * `-n <num>`: The number of games to play per instance.
- * `-b <name>`: The base player name to use. The player name for all games in
-   the instance will be `<name><n>`, where `<n>` is the instance number.
- * `-d <dir>`: The RC directory. Any include statements in the RC file will be
-   relative to this.
- * `-c`:  Remove any existing logfile, milestones, save, and count files.
-   Useful if you want to reset any statistics for games tracked in a local copy
-   of Sequell.
+Use `claude/run-parallel.py` to run qw games in parallel with health monitoring
+and real-time limits. See `claude/run-parallel.md` for full documentation.
 
 ## Miscellaneous tips for coding and testing
 

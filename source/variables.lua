@@ -96,6 +96,7 @@ local nasty_invis_caster = false
 local hostile_summon_timer = -200
 
 local stairdance_count = {}
+local stair_shout = {}
 local clear_exclusion_count = {}
 local vaults_end_entry_turn
 local tomb2_entry_turn

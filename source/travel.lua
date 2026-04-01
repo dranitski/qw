@@ -540,54 +540,51 @@ function update_goal_travel()
         end
     end
 
-    -- Don't autoexplore if we want to travel in some way. This allows us to
-    -- leave the level before it's completely explored.
-    disable_autoexplore = (goal_travel.stairs_dir
-            or goal_travel.safe_stairs
-            or goal_travel.safe_hatch
-            or goal_travel.want_go
-            or goal_travel.want_stash)
-        and goal_reachable
-        -- We do allow autoexplore even when we want to travel if the current
-        -- is fully explored, since then it's safe to pick up any surrounding
-        -- items like thrown projectiles or loot from e.g. stairdancing.
-        and (not explored_level(where_branch, where_depth)
-        -- However we don't allow autoexplore in this case if we're in the
-        -- Abyss, we're escaping with the Orb, or our current level is our
-        -- travel destination. The last exception is to allow within-level
-        -- plans like taking unexplored stairs and stash searches to on-level
-        -- destinations like altars to not be interrupted when runed doors
-        -- exist. In that case autoexplore would move us next to a runed door
-        -- and off of our intermediate stair, altar, etc., where we need to be.
-            or (in_branch("Abyss")
-                or goal_status == "Escape" and qw.have_orb
-                or goal_travel.branch and not goal_travel.want_go))
+    -- Always disable autoexplore when we need inter-level travel.
+    -- plan_go_command in explore2 handles the actual travel.
+    disable_autoexplore = goal_travel.want_go
+        or ((goal_travel.stairs_dir
+                or goal_travel.safe_stairs
+                or goal_travel.safe_hatch
+                or goal_travel.want_stash)
+            and goal_reachable
+            -- We do allow autoexplore even when we want to travel if the
+            -- current level is fully explored, since then it's safe to pick up
+            -- any surrounding items like thrown projectiles or loot from e.g.
+            -- stairdancing.
+            and (not explored_level(where_branch, where_depth)
+            -- However we don't allow autoexplore in this case if we're in the
+            -- Abyss, we're escaping with the Orb, or our current level is our
+            -- travel destination.
+                or (in_branch("Abyss")
+                    or goal_status == "Escape" and qw.have_orb
+                    or goal_travel.branch and not goal_travel.want_go)))
 
     if debug_channel("goals") then
         if goal_travel.branch then
-            dsay("Travel destination: "
+            note_decision("TRAVEL", "Travel destination: "
                 .. make_level(goal_travel.branch, goal_travel.depth))
         end
 
         if goal_travel.stairs_dir then
-            dsay("Stairs search dir: " .. tostring(goal_travel.stairs_dir))
+            note_decision("TRAVEL", "Stairs search dir: " .. tostring(goal_travel.stairs_dir))
         elseif goal_travel.safe_stairs then
-            dsay("Taking specific stairs for safety: "
+            note_decision("TRAVEL", "Taking specific stairs for safety: "
                 .. goal_travel.safe_stairs)
         elseif goal_travel.safe_hatch then
-            dsay("Taking hatch on destination level for safety at "
+            note_decision("TRAVEL", "Taking hatch on destination level for safety at "
                 .. pos_string(unhash_position(goal_travel.safe_hatch)))
         end
 
         if goal_travel.first_dir then
-            dsay("First dir: " .. tostring(goal_travel.first_dir))
+            note_decision("TRAVEL", "First dir: " .. tostring(goal_travel.first_dir))
         elseif goal_travel.first_branch then
-            dsay("First branch: " .. tostring(goal_travel.first_branch))
+            note_decision("TRAVEL", "First branch: " .. tostring(goal_travel.first_branch))
         end
 
-        dsay("Want stash travel: " .. bool_string(goal_travel.want_stash))
-        dsay("Want go travel: " .. bool_string(goal_travel.want_go))
-        dsay("Disable autoexplore: " .. bool_string(disable_autoexplore))
+        note_decision("TRAVEL", "Want stash travel: " .. bool_string(goal_travel.want_stash))
+        note_decision("TRAVEL", "Want go travel: " .. bool_string(goal_travel.want_go))
+        note_decision("TRAVEL", "Disable autoexplore: " .. bool_string(disable_autoexplore))
     end
 end
 

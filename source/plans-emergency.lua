@@ -2,10 +2,21 @@
 -- Emergency plans
 
 function plan_teleport()
-    if can_teleport() and want_to_teleport() then
+    if not want_to_teleport() then
+        return false
+    end
+
+    if can_teleport() then
         return teleport()
     end
 
+    note_decision("TELEPORT", "Teleport wanted but can't:"
+        .. " can_read=" .. tostring(can_read())
+        .. " confused=" .. tostring(you.confused())
+        .. " silenced=" .. tostring(you.silenced())
+        .. " teleporting=" .. tostring(you.teleporting())
+        .. " anchored=" .. tostring(you.anchored())
+        .. " have_scroll=" .. tostring(not not find_item("scroll", "teleportation")))
     return false
 end
 
@@ -88,7 +99,7 @@ function plan_tactical_step()
         return false
     end
 
-    say("Stepping ~*~*~tactically~*~*~ (" .. qw.tactical_reason .. ").")
+    note_decision("TACTICAL", "Stepping ~*~*~tactically~*~*~ (" .. qw.tactical_reason .. ").")
     return move_to(qw.tactical_step)
 end
 
@@ -96,6 +107,24 @@ function plan_priority_tactical_step()
     if qw.tactical_reason == "cloud"
             or qw.tactical_reason == "sticky flame" then
         return plan_tactical_step()
+    end
+
+    return false
+end
+
+function plan_early_flee()
+    if not qw.danger_in_los or not qw.can_flee_upstairs then
+        return false
+    end
+
+    -- Flee immediately on berserk cooldown.
+    if you.status("on berserk cooldown") and not buffed() then
+        return plan_flee()
+    end
+
+    -- At very low XL with critical HP, flee before trying anything else.
+    if you.xl() < 7 and hp_is_low(30) and not buffed() then
+        return plan_flee()
     end
 
     return false
@@ -116,7 +145,10 @@ function plan_flee()
     end
 
     if move_to(result.move) then
-        say("FLEEEEING towards " .. cell_string_from_map_position(result.dest))
+        qw.stats.flees = qw.stats.flees + 1
+        note_decision("FLEE", "FLEEEEING towards " .. cell_string_from_map_position(result.dest))
+        note_decision("FLEE", "Fleeing towards "
+            .. cell_string_from_map_position(result.dest))
         return true
     end
 
@@ -213,13 +245,15 @@ function plan_trogs_hand()
 end
 
 function plan_cure_bad_poison()
-    if not qw.danger_in_los then
+    local hp, mhp = you.hp()
+    local dangerous_dot = you.poison_survival() < hp
+    if not qw.danger_in_los and not dangerous_dot then
         return false
     end
 
-    if you.poison_survival() <= you.hp() - 60 then
+    if you.poison_survival() <= hp - 60 then
         if drink_by_name("curing") then
-            say("(to cure bad poison)")
+            note_decision("EMERGENCY", "(to cure bad poison)")
             return true
         end
 
@@ -342,8 +376,25 @@ function heal_general()
     if can_drink_heal_wounds() then
         if drink_by_name("heal wounds") then
             return true
-        elseif not item_type_is_ided("potion", "heal wounds")
-                and quaff_unided_potion() then
+        end
+    end
+
+    -- If heal wounds isn't identified yet, try any unidentified potion.
+    -- This catches the case where we HAVE heal wounds but can't find it
+    -- by name because it's unidentified.
+    if can_drink() and not item_type_is_ided("potion", "heal wounds")
+            and quaff_unided_potion() then
+        return true
+    end
+
+    -- Use curing potions as backup healing when heal wounds is unavailable.
+    -- Curing heals 5-9 HP. At low XL this is significant; at high XL it's
+    -- still better than nothing when we have no heal wounds.
+    local use_curing = you.xl() < 12
+        or (not find_item("potion", "heal wounds") and hp_is_low(33))
+    if use_curing and can_drink() then
+        if drink_by_name("curing") then
+            note_decision("HEAL", "(curing for emergency HP)")
             return true
         end
     end
@@ -361,7 +412,14 @@ end
 
 function plan_heal_wounds()
     if want_to_heal_wounds() then
-        return heal_general()
+        note_decision("HEAL", "Heal wanted, attempting heal_general()")
+        local result = heal_general()
+        if result then
+            qw.stats.heals = qw.stats.heals + 1
+        else
+            note_decision("HEAL", "heal_general() failed")
+        end
+        return result
     end
 
     return false
@@ -388,7 +446,7 @@ function can_might()
 end
 
 function want_to_might()
-    if not danger
+    if not qw.danger_in_los
             or dangerous_to_attack()
             or you.mighty()
             or you.teleporting()
@@ -416,10 +474,31 @@ function plan_might()
 end
 
 function plan_berserk()
-    if can_berserk() and want_to_berserk() then
+    if not want_to_berserk() then
+        return false
+    end
+
+    if can_berserk() then
+        -- In extreme danger, pre-read teleport as safety net. The delayed
+        -- teleport fires after berserk ends. Next turn the cascade re-runs
+        -- and berserks (you.teleporting() doesn't block berserk).
+        if not you.teleporting() and can_teleport() then
+            local result = assess_enemies(const.duration.available)
+            if result.threat >= extreme_threat_level() then
+                note_decision("EMERGENCY", "PRE-BERSERK TELEPORT")
+                return teleport()
+            end
+        end
+
         return use_ability("Berserk")
     end
 
+    note_decision("BERSERK", "Berserk wanted but can't:"
+        .. " can_invoke=" .. tostring(can_invoke())
+        .. " cooldown=" .. tostring(you.status("on berserk cooldown"))
+        .. " mesmerised=" .. tostring(you.mesmerised())
+        .. " afraid=" .. tostring(you.status("afraid"))
+        .. " piety_rank=" .. tostring(you.piety_rank()))
     return false
 end
 
@@ -434,9 +513,9 @@ end
 function plan_recall()
     if can_recall() and want_to_recall() then
         if you.god() == "Yredelemnul" then
-            use_ability("Recall Undead Slaves", "", true)
+            return use_ability("Recall Undead Slaves", "", true)
         else
-            use_ability("Recall Orcish Followers", "", true)
+            return use_ability("Recall Orcish Followers", "", true)
         end
     end
 
@@ -491,9 +570,24 @@ function want_to_brothers_in_arms()
         return false
     end
 
-    -- If threat is too high even with any available buffs like berserk.
     local result = assess_enemies(const.duration.available)
-    if result.threat >= 15 then
+
+    -- Proactive: summon ally when threat is high. Brothers in Arms is
+    -- positioned before Berserk in cascade, so the ally arrives first.
+    -- On dangerous levels, summon at lower threshold — allies are free tanks.
+    local bia_threshold = high_threat_level() + 5
+    if in_branch("Depths") or in_branch("Zot")
+            or (in_branch("Vaults") and at_branch_end("Vaults")) then
+        bia_threshold = high_threat_level()
+    end
+    if result.threat >= bia_threshold then
+        return true
+    end
+
+    -- Reactive: use as alternative during berserk cooldown when the bot
+    -- can't berserk but faces significant danger.
+    if you.status("on berserk cooldown")
+            and result.threat >= high_threat_level() then
         return true
     end
 
@@ -637,18 +731,47 @@ function want_to_teleport()
         return true
     end
 
-    if count_hostile_summons(qw.los_radius) > 0 and you.xl() < 21 then
+    -- Count teleport scrolls to decide how conservatively to use them.
+    local tele_scroll = find_item("scroll", "teleportation")
+    local tele_count = tele_scroll and tele_scroll.quantity or 0
+
+    -- Only teleport for hostile summons when we have multiple scrolls.
+    if count_hostile_summons(qw.los_radius) > 0
+            and you.xl() < 21 and tele_count >= 2 then
         hostile_summons_timer = you.turns()
         return true
     end
 
-    if qw.immediate_danger and bad_corrosion()
-            or qw.immediate_danger and hp_is_low(25) then
-            return true
+    -- Teleport for corrosion only when it's really bad and we can spare one.
+    if qw.immediate_danger and bad_corrosion() and tele_count >= 2 then
+        return true
     end
 
+    -- At low XL, teleport earlier: small HP pools mean a single hit can kill.
+    -- At high XL with few scrolls, be more conservative.
+    local tp_threshold
+    if you.xl() < 9 then
+        tp_threshold = 50
+    elseif tele_count <= 1 then
+        tp_threshold = 25  -- last scroll: emergency only
+    else
+        tp_threshold = 40
+    end
+    if qw.immediate_danger and hp_is_low(tp_threshold) then
+        return true
+    end
+
+    -- Prefer fleeing over teleporting when we can actually move, but
+    -- don't skip teleport when we're stuck (flee path blocked) or when
+    -- a scary enemy is adjacent and HP is low — distortion etc. can
+    -- one-shot us before we reach stairs.
     if will_flee() then
-        return false
+        local scary = get_scary_enemy(const.duration.available)
+        local stuck_fleeing = qw.danger_in_los and hp_is_low(50)
+            and scary and check_following_melee_enemies(2)
+        if not stuck_fleeing then
+            return false
+        end
     end
 
     local enemies = assess_enemies(const.duration.available)
@@ -671,6 +794,14 @@ function want_to_heal_wounds()
         return true
     end
 
+    -- Heal during dangerous DOT even without enemies visible
+    local hp, mhp = you.hp()
+    local dominated_by_dot = (you.poison_survival() < hp)
+        or you.status("on fire")
+    if hp_is_low(50) and dominated_by_dot then
+        return true
+    end
+
     if not qw.danger_in_los then
         return false
     end
@@ -679,7 +810,13 @@ function want_to_heal_wounds()
         return true
     end
 
-    return hp_is_low(25)
+    -- At low XL, heal earlier: small HP pools mean percentage thresholds
+    -- leave dangerously few absolute HP.
+    local low_xl = you.xl() < 9
+    if qw.immediate_danger then
+        return hp_is_low(low_xl and 50 or 40)
+    end
+    return hp_is_low(low_xl and 35 or 25)
 end
 
 function want_resistance()
@@ -763,10 +900,43 @@ function want_to_trogs_hand()
         return false
     end
 
+    -- Always use in Abyss when missing significant HP.
     local hp, mhp = you.hp()
-    return in_branch("Abyss") and mhp - hp >= 30
-        or not dangerous_to_attack()
-            and check_enemies_in_list(qw.los_radius, hand_monsters)
+    if in_branch("Abyss") and mhp - hp >= 30 then
+        return true
+    end
+
+    if not qw.danger_in_los or dangerous_to_attack() then
+        return false
+    end
+
+    -- Use against known dangerous casters (original behavior).
+    if check_enemies_in_list(qw.los_radius, hand_monsters) then
+        return true
+    end
+
+    -- Use against any unique — they're always more dangerous than normal
+    -- monsters and the regen helps survive unexpected burst damage.
+    for _, enemy in ipairs(qw.enemy_list) do
+        if enemy.minfo:is_unique() and enemy:distance() <= qw.los_radius then
+            return true
+        end
+    end
+
+    -- Proactively buff when facing significant threat. Trog's Hand is
+    -- cheap and stacks with Berserk, so using it early is always good.
+    -- This fires before Berserk in the cascade, setting up the combo.
+    local result = assess_enemies(const.duration.available)
+    if result.threat >= high_threat_level() then
+        return true
+    end
+
+    -- Use when HP is dropping and enemies are present.
+    if hp_is_low(70) and result.threat >= max(3, high_threat_level() * 0.5) then
+        return true
+    end
+
+    return false
 end
 
 function check_berserkable_enemies()
@@ -776,25 +946,97 @@ function check_berserkable_enemies()
     return check_enemies(2, filter)
 end
 
+-- Estimate whether we can kill all visible enemies within berserk's
+-- ~12 turns. Returns true if total enemy HP / berserk DPS <= 12.
+function can_kill_in_berserk()
+    local total_hp = 0
+    local count = 0
+    local dps_target = nil
+    for _, enemy in ipairs(qw.enemy_list) do
+        if enemy:distance() <= qw.los_radius
+                and (enemy:is_ranged(true)
+                    or enemy:has_path_to_melee_player()) then
+            total_hp = total_hp + enemy:hp()
+            count = count + 1
+            if not dps_target then
+                dps_target = enemy
+            end
+        end
+    end
+
+    if count == 0 or not dps_target then
+        return false
+    end
+
+    -- Calculate berserk DPS: damage/delay with berserk factored in.
+    -- const.duration.available already includes berserk in calculations.
+    local dps = player_attack_damage(dps_target, 1,
+            const.duration.available)
+        / player_attack_delay(1, const.duration.available)
+
+    if dps <= 0 then
+        return false
+    end
+
+    -- Conservative estimate: berserk lasts 10-20 turns, use 12 as cutoff.
+    -- If we can't kill everything in 12 turns, berserk may end mid-fight.
+    local turns_needed = total_hp / dps
+    return turns_needed <= 12
+end
+
 function want_to_berserk()
     if not qw.danger_in_los or dangerous_to_melee() or you.berserk() then
         return false
     end
 
-    if hp_is_low(50) and check_berserkable_enemies()
-            or invis_monster and nasty_invis_caster then
+    -- Don't berserk if Trog's Hand regen is handling the situation
+    -- and HP isn't critical.
+    if you.regenerating() and not hp_is_low(33) then
+        return false
+    end
+
+    -- Emergency berserk: HP critical with enemies in melee range.
+    -- On D:1 where there's no upstairs to flee to, berserk earlier.
+    local berserk_threshold = qw.can_flee_upstairs and 33 or 50
+    if hp_is_low(berserk_threshold) and check_berserkable_enemies() then
+        -- At low XL with only one adjacent enemy and escape available, prefer
+        -- fleeing over berserking to avoid cooldown deaths.
+        if you.xl() < 5 and qw.can_flee_upstairs
+                and count_enemies(2) <= 1 then
+            return false
+        end
+        return true
+    end
+
+    -- Always berserk against nasty invisible casters.
+    if invis_monster and nasty_invis_caster then
         return true
     end
 
     local result = assess_enemies(const.duration.available, 2)
+
+    -- Berserk if a scary enemy specifically benefits from berserk damage.
+    -- Conservative berserk only at high XL where the bot should have
+    -- consumables. At low XL, berserk freely — it's the main survival tool.
+    local have_escape = find_item("scroll", "teleportation")
+        or find_item("potion", "heal wounds")
+    local conservative = you.xl() >= 15 and not have_escape
     if result.scary_enemy then
         local attack = result.scary_enemy:best_player_attack()
-        if attack and attack.uses_berserk then
+        if attack and attack.uses_berserk
+                and can_kill_in_berserk()
+                and (not conservative or hp_is_low(50)) then
             return true
         end
     end
 
-    if result.threat >= high_threat_level() then
+    -- High threat with immediate danger — but only if we can finish
+    -- the fight within berserk duration. At high XL without escape items,
+    -- only berserk when HP is already low.
+    if qw.immediate_danger
+            and result.threat >= high_threat_level()
+            and can_kill_in_berserk()
+            and (not conservative or hp_is_low(50)) then
         return true
     end
 
@@ -879,7 +1121,7 @@ function plan_cure_confusion()
     end
 
     if drink_by_name("curing") then
-        say("(to cure confusion)")
+        note_decision("EMERGENCY", "(to cure confusion)")
         return true
     end
 
@@ -1037,6 +1279,7 @@ function set_plan_emergency()
         {plan_exit_abyss, "exit_abyss"},
         {plan_go_down_abyss, "go_down_abyss"},
         {plan_pick_up_rune, "pick_up_rune"},
+        {plan_early_flee, "early_flee"},
         {plan_special_purification, "special_purification"},
         {plan_cure_confusion, "cure_confusion"},
         {plan_cancellation, "cancellation"},
@@ -1047,6 +1290,11 @@ function set_plan_emergency()
         {plan_drain_life, "drain_life"},
         {plan_heal_wounds, "heal_wounds"},
         {plan_trogs_hand, "trogs_hand"},
+        {plan_brothers_in_arms, "brothers_in_arms"},
+        {plan_resistance, "resistance"},
+        {plan_might, "might"},
+        {plan_haste, "haste"},
+        {plan_berserk, "berserk"},
         {plan_escape_net, "escape_net"},
         {plan_move_towards_abyssal_rune, "move_towards_abyssal_rune"},
         {plan_move_towards_abyssal_feature, "move_towards_abyssal_feature"},
@@ -1061,7 +1309,6 @@ function set_plan_emergency()
         {plan_magic_points, "magic_points"},
         {plan_cleansing_flame, "try_cleansing_flame"},
         {plan_divine_warrior, "divine_warrior"},
-        {plan_brothers_in_arms, "brothers_in_arms"},
         {plan_greater_servant, "greater_servant"},
         {plan_apocalypse, "try_apocalypse"},
         {plan_slouch, "try_slouch"},
@@ -1070,14 +1317,10 @@ function set_plan_emergency()
         {plan_fiery_armour, "fiery_armour"},
         {plan_dig_grate, "try_dig_grate"},
         {plan_wield_weapon, "wield_weapon"},
-        {plan_resistance, "resistance"},
         {plan_finesse, "finesse"},
         {plan_heroism, "heroism"},
-        {plan_haste, "haste"},
-        {plan_might, "might"},
         {plan_recall, "recall"},
         {plan_recall_ancestor, "try_recall_ancestor"},
         {plan_recite, "try_recite"},
-        {plan_berserk, "berserk"},
     }
 end

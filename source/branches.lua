@@ -126,7 +126,9 @@ end
 
 function branch_travel(branch)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "unknown branch: " .. tostring(branch)
+            .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     return branch_data[branch].travel
@@ -134,7 +136,9 @@ end
 
 function branch_depth(branch)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "branch_depth() called with unknown branch: "
+            .. tostring(branch) .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     return branch_data[branch].depth
@@ -142,7 +146,9 @@ end
 
 function branch_entrance(branch)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "unknown branch: " .. tostring(branch)
+            .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     return branch_data[branch].entrance
@@ -150,7 +156,9 @@ end
 
 function branch_exit(branch)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "branch_exit() called with unknown branch: "
+            .. tostring(branch) .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     local result
@@ -165,7 +173,8 @@ end
 
 function portal_entrance_description(portal)
     if not portal_data[portal] then
-        error("Unknown portal: " .. tostring(portal))
+        qw_assert(false, "unknown portal: " .. tostring(portal)
+            .. " (where=" .. tostring(where) .. ")")
     end
 
     return portal_data[portal].entrance_description
@@ -189,7 +198,8 @@ end
 
 function portal_final_message(portal)
     if not portal_data[portal] then
-        error("Unknown portal: " .. tostring(portal))
+        qw_assert(false, "unknown portal: " .. tostring(portal)
+            .. " (where=" .. tostring(where) .. ")")
     end
 
     return portal_data[portal].final_message
@@ -216,7 +226,8 @@ end
 
 function portal_timeout(portal)
     if not portal_data[portal] then
-        error("Unknown portal: " .. tostring(portal))
+        qw_assert(false, "unknown portal: " .. tostring(portal)
+            .. " (where=" .. tostring(where) .. ")")
     end
 
     return portal_data[portal].timeout
@@ -224,7 +235,8 @@ end
 
 function portal_description(portal)
     if not portal_data[portal] then
-        error("Unknown portal: " .. tostring(portal))
+        qw_assert(false, "unknown portal: " .. tostring(portal)
+            .. " (where=" .. tostring(where) .. ")")
     end
 
     return portal_data[portal].description
@@ -232,7 +244,9 @@ end
 
 function parent_branch(branch)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "unknown branch: " .. tostring(branch)
+            .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     return branch_data[branch].parent,
@@ -242,7 +256,9 @@ end
 
 function branch_runes(branch, item_names)
     if not branch_data[branch] then
-        error("Unknown branch: " .. tostring(branch))
+        qw_assert(false, "unknown branch: " .. tostring(branch)
+            .. " (where=" .. tostring(where)
+            .. " goal_branch=" .. tostring(goal_branch) .. ")")
     end
 
     local runes = branch_data[branch].runes
@@ -365,7 +381,7 @@ function record_portal(level, portal, permanent)
     end
 
     if debug_channel("explore") then
-        dsay("Found " .. portal)
+        note_decision("BRANCH", "Found " .. portal)
     end
 
     -- Permanent portals go at the beginning, so they'll always be chosen last.
@@ -402,7 +418,7 @@ function remove_portal(level, portal, silent)
 
     if portal_allowed(portal) then
         if not silent then
-            say("RIP " .. portal:upper())
+            note_decision("BRANCH", "RIP " .. portal:upper())
         end
 
         qw.want_goal_update = true

@@ -70,6 +70,52 @@ function reset_cached_turn_data(force)
     qw.last_turn_reset = turns
 end
 
+function validate_action(time_passed)
+    local action = qw.expected_action
+    local failed = qw.action_failed
+    qw.expected_action = nil
+    qw.action_failed = nil
+
+    if not action then
+        return
+    end
+
+    -- Turn advanced: reset all failure counters (any action succeeded).
+    if time_passed then
+        qw.action_fails = nil
+        return
+    end
+
+    -- Turn did NOT advance. Log and track the failure.
+    local msg = action
+    if failed then
+        msg = msg .. ": " .. failed
+    else
+        msg = msg .. " (silent)"
+    end
+    note_decision("ACTION-FAIL", msg .. " on " .. tostring(where))
+
+    if not qw.action_fails then
+        qw.action_fails = {}
+    end
+    qw.action_fails[action] = (qw.action_fails[action] or 0) + 1
+
+    -- Any action that fails 50+ turns in a row is a stuck loop.
+    if qw.action_fails[action] >= 50 then
+        qw_assert(false, "action '" .. action .. "' failed "
+            .. qw.action_fails[action]
+            .. " consecutive times on " .. tostring(where))
+    end
+end
+
+-- Returns the number of consecutive failures for a given action type.
+function action_fail_count(action)
+    if qw.action_fails then
+        return qw.action_fails[action] or 0
+    end
+    return 0
+end
+
 -- We want to call this exactly once each turn.
 function turn_update()
     if not qw.initialized then
@@ -77,7 +123,10 @@ function turn_update()
     end
 
     local turns = you.turns()
-    if turns == qw.turn_count then
+    local time_passed = turns ~= qw.turn_count
+    validate_action(time_passed)
+
+    if not time_passed then
         qw.time_passed = false
         return
     end
@@ -91,7 +140,7 @@ function turn_update()
     update_equip_tracking()
 
     if you.turns() >= qw.dump_count then
-        dump_count = qw.dump_count + 100
+        qw.dump_count = qw.dump_count + 100
         crawl.dump_char()
     end
 
@@ -112,6 +161,16 @@ function turn_update()
     local new_level = false
     local full_map_clear = false
     if you.where() ~= where then
+        local new_where = you.where()
+        if qw.debug_mode then
+            if not qw.dumped_levels then
+                qw.dumped_levels = {}
+            end
+            if not qw.dumped_levels[new_where] then
+                qw.dumped_levels[new_where] = true
+                qw.dump_new_level = true
+            end
+        end
         new_level = previous_where ~= nil
         cache_parity = 3 - cache_parity
 
@@ -142,6 +201,11 @@ function turn_update()
             tomb2_entry_turn = qw.turn_count
         elseif where == "Tomb:3" and not tomb3_entry_turn then
             tomb3_entry_turn = qw.turn_count
+        end
+
+        if qw.dump_new_level then
+            qw.dump_new_level = false
+            dump_level_map_to_file("grid")
         end
     end
 
@@ -184,6 +248,48 @@ function turn_update()
 
     update_move_destination()
     update_flee_positions()
+
+    -- Force goal re-evaluation when critically low on consumables.
+    -- This catches the case where the bot uses its last teleport scroll
+    -- mid-level and needs to change strategy.
+    if not qw.want_goal_update
+            and not find_item("scroll", "teleportation")
+            and not find_item("potion", "heal wounds")
+            and qw.had_consumables then
+        qw.want_goal_update = true
+    end
+    qw.had_consumables = find_item("scroll", "teleportation")
+        or find_item("potion", "heal wounds")
+
+    -- Periodically force goal re-evaluation to detect stuck states
+    -- where G-travel runs silently for thousands of turns.
+    if not qw.want_goal_update and qw.turn_count % 100 == 0 then
+        qw.want_goal_update = true
+    end
+
+    -- Detect stuck autoexplore: track cumulative turns spent on each
+    -- unexplored level. If total exceeds 1000, mark as force-explored.
+    if not explored_level(where_branch, where_depth) then
+        if not c_persist.explore_turns then
+            c_persist.explore_turns = {}
+        end
+        c_persist.explore_turns[where] =
+            (c_persist.explore_turns[where] or 0) + 1
+        if c_persist.explore_turns[where] > 1000 then
+            qw.stats.explore_stuck = qw.stats.explore_stuck + 1
+            note_decision("AUTOEXPLORE", "Spent "
+                .. c_persist.explore_turns[where]
+                .. " cumulative turns on " .. where
+                .. ", marking as force-explored to skip")
+            c_persist.autoexplore[where] = const.autoexplore.full
+            if not c_persist.force_explored then
+                c_persist.force_explored = {}
+            end
+            c_persist.force_explored[where] = true
+            c_persist.explore_turns[where] = nil
+            qw.want_goal_update = true
+        end
+    end
 
     if qw.want_goal_update then
         update_goal()

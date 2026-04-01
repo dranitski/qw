@@ -7,6 +7,7 @@ function plan_random_step()
     end
 
     qw.stuck_turns = qw.stuck_turns + 1
+    qw.stats.stuck_turns = qw.stats.stuck_turns + 1
     return random_step("stuck")
 end
 
@@ -61,16 +62,7 @@ function plan_stuck_move_towards_escape_hatch()
 end
 
 function plan_clear_exclusions()
-    local n = clear_exclusion_count[where] or 0
-    if n > 20 then
-        return false
-    end
-
-    clear_exclusion_count[where] = n + 1
-    remove_exclusions(true)
-    magic("X" .. control('e'))
-    qw.do_dummy_action = false
-    return true
+    return false
 end
 
 function plan_stuck_dig_grate()
@@ -103,7 +95,7 @@ function plan_forget_map()
             and not qw.danger_in_los
             and (at_branch_end("Slime") and not have_branch_runes("Slime")
                 or at_branch_end("Geh") and not have_branch_runes("Geh")) then
-        magic("X" .. control('f'))
+        magic("X" .. control('f'), "map_search")
         return true
     end
 

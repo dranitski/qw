@@ -484,10 +484,10 @@ function EquipmentCombinationIterator:new(inventory, extra_item)
             table.insert(inv_counts, slot .. ":"
                 .. tostring(#iter.inventory[slot]))
         end
-        dsay("Item counts for slots: " .. table.concat(inv_counts, ", "))
+        note_decision("EQUIP", "Item counts for slots: " .. table.concat(inv_counts, ", "))
 
         if extra_item then
-            dsay("Extra item: " .. qw.stringify(extra_item))
+            note_decision("EQUIP", "Extra item: " .. qw.stringify(extra_item))
         end
     end
 
@@ -720,17 +720,23 @@ function equip_item(item, slot, keep_items)
         return false
     end
 
-    local verb = "WEARING"
-    local key = "W"
-    if slot == "ring" or slot == "amulet" then
-        key = "P"
-    elseif slot == "weapon" then
-        verb = "WIELDING"
-        key = "w"
+    if slot == "weapon" then
+        note_decision("EQUIP", "WIELDING " .. item.name())
+        item.wield()
+    elseif slot == "ring" then
+        -- Rings use magic() because the slot selection prompt ("Which ring?")
+        -- needs dest_letter to feed the key buffer when both slots are full.
+        note_decision("EQUIP", "WEARING " .. item.name())
+        magic("P" .. item_letter(item) .. dest_letter)
+        return true
+    elseif slot == "amulet" then
+        note_decision("EQUIP", "WEARING " .. item.name())
+        item.puton()
+    else
+        note_decision("EQUIP", "WEARING " .. item.name())
+        item.wear()
     end
-
-    say(verb .. " " .. item.name())
-    magic(key .. item_letter(item) .. dest_letter)
+    qw.did_magic = true
     return true
 end
 
@@ -739,13 +745,9 @@ function unequip_item(item, slot)
         return false
     end
 
-    local verb = "REMOVING"
-    local key = "T"
-    if slot == "ring" or slot == "amulet" then
-        key = "R"
-    end
-    say(verb .. " " .. item.name())
-    magic(key .. item_letter(item))
+    note_decision("EQUIP", "REMOVING " .. item.name())
+    item.remove()
+    qw.did_magic = true
     return true
 end
 
@@ -773,7 +775,7 @@ function update_equip_tracking()
         local prev_count = qw.inventory_equip[name]
         if not prev_count or seen > prev_count then
             if debug_channel("items") then
-                dsay("Resetting best equip due to new item: " .. name)
+                note_decision("EQUIP", "Resetting best equip due to new item: " .. name)
             end
 
             reset_best_equip()

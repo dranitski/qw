@@ -11,9 +11,12 @@ function use_ability(name, extra, mute)
             end
 
             if not mute then
-                say("INVOKING " .. name .. ".")
+                note_decision("PLAN", "INVOKING " .. name .. ".")
             end
 
+            if name == "Berserk" then
+                qw.stats.berserks = qw.stats.berserks + 1
+            end
             magic("a" .. letter .. (extra or ""))
             return true
         end
@@ -50,6 +53,15 @@ end
 function plan_quit()
     if goal_status == "Quit" then
         c_persist.last_completed_goal = goal_status
+        local msg = "stuck quit on " .. you.where()
+            .. " at turn " .. you.turns()
+            .. " (stuck_turns=" .. qw.stuck_turns .. ")"
+        note_decision("QUIT", msg)
+        dump_stats()
+        write_reason("ERROR", msg)
+        if crawl.quit_game then
+            crawl.quit_game()
+        end
         magic(control('q') .. "yes\r")
         return true
     end
@@ -90,7 +102,7 @@ function cascade(plans)
 
                 if debug_channel("plans") and result ~= false
                         or debug_channel("plans-all") then
-                    dsay("Ran " .. plandata[2] .. ": " .. tostring(result))
+                    note_decision("PLAN", "Ran " .. plandata[2] .. ": " .. tostring(result))
                 end
 
                 if result == nil or result == true then
@@ -99,23 +111,19 @@ function cascade(plans)
                     end
                     next_delay = qw.delay_time
 
-                    return
+                    return result
                 end
             elseif plan_turns[plan] and plan_result[plan] == true then
-                if not plandata[2]:find("^try") then
-                    panic(plandata[2] .. " failed despite returning true.")
-                end
-
-                local fail_count = c_persist.plan_fail_count[plandata[2]]
-                if not fail_count then
-                    fail_count = 0
-                end
-                fail_count = fail_count + 1
-                c_persist.plan_fail_count[plandata[2]] = fail_count
-
-                if qw.want_goal_update then
-                    update_goal()
-                end
+                -- A plan returned true (claimed to act) but the turn
+                -- didn't advance. This happens because magic() is async —
+                -- keys are queued but may not consume a turn (e.g.
+                -- autoexplore completing instantly, travel failing).
+                -- Log it and skip so the cascade continues.
+                note_decision("STUCK-PLAN", plandata[2]
+                    .. " returned true without advancing turn="
+                    .. tostring(you.turns())
+                    .. " where=" .. tostring(where))
+                plan_result[plan] = false
             end
         end
 

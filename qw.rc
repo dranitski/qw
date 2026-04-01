@@ -18,15 +18,9 @@
 # Default username.
 name = qw
 
-# Set to true to have qw play with a delay between each action.
-: DELAYED = true
-
-# Delay per action in milliseconds.
-: DELAY_TIME = 125
-
 # Whether to start playing immediately when a new game is started.
 # Unfortunately this doesn't work if the game starts with a -more-.
-: AUTO_START = false
+: AUTO_START = true
 
 ################
 ### Gameplay ###
@@ -40,7 +34,7 @@ name = qw
 
 # Choose randomly between these combos. This will not apply if the COMBO_CYCLE
 # option was on in your _previous_ game.
-combo = GrBe.handaxe
+combo = MiFi.waraxe
 
 # For random berserkers, use these combos:
 # combo = DEBe.handaxe, DrBe.handaxe, DsBe.handaxe, FeBe.claws, FoBe.handaxe
@@ -55,7 +49,7 @@ combo = GrBe.handaxe
 # include += hyperqwcombo.rc
 
 # The default acceptable gods; we join whichever one we find first.
-: GOD_LIST = { "Trog", "Okawaru", "Makhleb"}
+: GOD_LIST = { "Okawaru"}
 
 # Use faded altar, abandoning if we don't get one of the gods in GOD_LIST.
 : FADED_ALTAR = false
@@ -112,12 +106,8 @@ equip_bar = true
 ability_menu = false
 force_ability_targeter =
 force_spell_targeter =
-view_delay = 20
-use_animations = beam, pickup, player, branch_entry
 darken_beyond_range = false
 clear_messages = true
-travel_delay = -1
-explore_delay = -1
 rest_delay = -1
 travel_key_stop = false
 default_manual_training = true
@@ -126,7 +116,6 @@ hp_warning = 0
 show_more = false
 show_newturn_mark = false
 force_more_message =
-show_travel_trail = false
 skill_focus = false
 # Let's go.
 autoinscribe += slay:mikee
@@ -152,7 +141,7 @@ read_persist_options = true
 message_colour ^= mute:Unknown command
 
 explore_stop =
-explore_stop += items,branches,portals,stairs,altars
+explore_stop += items,branches,portals,stairs,altars,shops
 explore_stop += greedy_visited_item_stack,greedy_pickup_smart
 
 stop := runrest_stop_message
@@ -177,10 +166,6 @@ bindkey = [^D] CMD_LUA_CONSOLE
 autopickup =
 autopickup_exceptions =
 
-# Use the coroutine to break up execution so as to avoid lua throttling and
-# high memory usage.
-: COROUTINE_THROTTLE = true
-
 # How much memory in megabytes qw is allowed to use before trying to garbage
 # collect and subsequently terminating if it's still using more than this
 # limit. Note that you muse use the -lua-max-memory crawl command-line option
@@ -193,12 +178,6 @@ autopickup_exceptions =
 ### Debugging ###
 #################
 
-# Enable debug output.
-: DEBUG_MODE = false
-
-# Which debug message channels to output.
-: DEBUG_CHANNELS = { "goals", "plans" }
-
 # Tab just takes a single action (for testing).
 : SINGLE_STEP = false
 
@@ -207,4 +186,4 @@ autopickup_exceptions =
 
 # See README.md for details on using make-qw.sh to either set up a qw.lua file
 # or include the lua from the line below.
-# include = qw.lua
+include = qw.lua

@@ -6,7 +6,7 @@ function read_scroll(item, etc)
         etc = ""
     end
 
-    say("READING " .. item.name() .. ".")
+    note_decision("ITEM", "READING " .. item.name() .. ".")
     magic("r" .. item_letter(item) .. etc)
 end
 
@@ -21,7 +21,7 @@ function read_scroll_by_name(name, etc)
 end
 
 function drink_potion(item)
-    say("DRINKING " .. item.name() .. ".")
+    note_decision("ITEM", "DRINKING " .. item.name() .. ".")
     magic("q" .. item_letter(item))
 end
 
@@ -36,7 +36,11 @@ function drink_by_name(name)
 end
 
 function teleport()
-    return read_scroll_by_name("teleportation")
+    local ok = read_scroll_by_name("teleportation")
+    if ok then
+        qw.stats.teleports = qw.stats.teleports + 1
+    end
+    return ok
 end
 
 function dangerous_hydra_distance(ignore_weapon)
@@ -210,7 +214,7 @@ end
 
 function plan_maybe_pickup_acquirement()
     if qw.acquirement_pickup then
-        magic(",")
+        magic(",", "pickup")
         qw.acquirement_pickup = false
         return true
     end
@@ -283,8 +287,8 @@ function plan_remove_terrible_rings()
         return false
     end
 
-    say("REMOVING " .. worst_ring.name() .. ".")
-    magic("R" .. item_letter(worst_ring))
+    note_decision("EQUIP", "REMOVING " .. worst_ring.name() .. ".")
+    magic("R" .. item_letter(worst_ring), "item_use")
     return true
 end
 
@@ -605,8 +609,8 @@ function plan_drop_items()
 
     for item in inventory_iter() do
         if want_drop_item(item) then
-            say("DROPPING " .. item.name() .. ".")
-            magic("d" .. item_letter(item) .. "\r")
+            note_decision("ITEM", "DROPPING " .. item.name() .. ".")
+            magic("d" .. item_letter(item) .. "\r", "item_use")
             return true
         end
     end
@@ -631,7 +635,7 @@ function plan_quaff_unided_potions()
         return false
     end
 
-    return quaff_unided_potion(2)
+    return quaff_unided_potion(1)
 end
 
 function read_unided_scroll()
@@ -701,6 +705,9 @@ function plan_shop()
     local it, price, on_list
     local sitems = items.shop_inventory()
     table.sort(sitems, shop_item_sort)
+    if debug_channel("shopping") then
+        note_decision("SHOPPING", "in shop, " .. #sitems .. " items, gold=" .. you.gold())
+    end
     for n, e in ipairs(sitems) do
         it = e[1]
         price = e[2]
@@ -710,44 +717,175 @@ function plan_shop()
             -- We want the item. Can we afford buying it now?
             local wealth = you.gold()
             if price <= wealth then
-                say("BUYING " .. it.name() .. " (" .. price .. " gold).")
-                magic("<//" .. items.index_to_letter(n - 1) .. "\ry")
-                return
+                qw.stats.purchases = qw.stats.purchases + 1
+                note_decision("SHOP", "BUYING " .. it.name() .. " (" .. price .. " gold).")
+                magic("<//" .. items.index_to_letter(n - 1) .. "\ry", "shop")
+                return true
             -- Should in theory also work in Bazaar, but doesn't make much
             -- sense (since we won't really return or acquire money and travel
             -- back here)
             elseif not on_list
                  and not in_branch("Bazaar") and not branch_soon("Zot") then
-                say("SHOPLISTING " .. it.name() .. " (" .. price .. " gold"
+                note_decision("SHOP", "SHOPLISTING " .. it.name() .. " (" .. price .. " gold"
                  .. ", have " .. wealth .. ").")
-                magic("<//" .. string.upper(items.index_to_letter(n - 1)))
-                return
+                magic("<//" .. string.upper(items.index_to_letter(n - 1)), "shop")
+                return true
             end
         elseif on_list then
             -- We no longer want the item. Remove it from shopping list.
-            magic("<//" .. string.upper(items.index_to_letter(n - 1)))
-            return
+            if debug_channel("shopping") then
+                note_decision("SHOPPING", "removing " .. it.name() .. " from list"
+                    .. " (no longer wanted)")
+            end
+            magic("<//" .. string.upper(items.index_to_letter(n - 1)), "shop")
+            return true
         end
     end
     return false
 end
 
+-- Travel to a shop to re-populate the shopping list when critically low
+-- on consumables. Uses Ctrl+F stash search for "shop".
+function plan_visit_shop()
+    if unable_to_travel() or goal_status ~= "Shopping" then
+        qw.shop_visit_turn = nil
+        return false
+    end
+
+    -- Abort shopping if we have 3 runes — cancel travel and head to Zot.
+    if you.num_runes() >= 3 then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "aborting visit_shop, have 3 runes")
+        end
+        c_persist.done_shopping = true
+        qw.shop_visit_turn = nil
+        crawl.flush_input()
+        update_goal()
+        return true
+    end
+
+    -- Only trigger when shoplist is empty but we need items.
+    local shoplist = items.shopping_list()
+    if shoplist and #shoplist > 0 then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "visit_shop skipped, shoplist has "
+                .. #shoplist .. " items")
+        end
+        return false  -- shoplist has items, let plan_shopping_spree handle
+    end
+
+    -- Check if we need consumables.
+    if find_item("scroll", "teleportation")
+            and find_item("potion", "heal wounds") then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "visit_shop skipped, have tele+heal")
+        end
+        return false  -- we have what we need
+    end
+
+    if you.gold() < 100 then
+        -- Can't afford anything, give up.
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "visit_shop giving up, gold=" .. you.gold())
+        end
+        c_persist.done_shopping = true
+        qw.shop_visit_turn = nil
+        update_goal()
+        return false
+    end
+
+    -- Timeout: give up after 200 turns.
+    if qw.shop_visit_turn
+            and you.turns() - qw.shop_visit_turn > 200 then
+        note_decision("SHOP", "SHOP VISIT: travel timeout, giving up")
+        c_persist.done_shopping = true
+        qw.shop_visit_turn = nil
+        update_goal()
+        return false
+    end
+
+    -- Check if we arrived at a shop.
+    if view.feature_at(0, 0) == "enter_shop" then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "arrived at shop")
+        end
+        qw.shop_visit_turn = nil
+        return false  -- plan_shop will handle buying
+    end
+
+    -- Use Ctrl+F stash search every turn. Re-sending is safe and handles
+    -- travel interruptions (monsters, stairs, etc.) automatically.
+    if not qw.shop_visit_turn then
+        note_decision("SHOP", "SHOP VISIT: traveling to restock consumables")
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "starting shop visit travel")
+        end
+        qw.shop_visit_turn = you.turns()
+    end
+    magicfind("shop")
+    return true
+end
+
 function plan_shopping_spree()
     if unable_to_travel() or goal_status ~= "Shopping" then
+        note_decision("SHOP", "SHOPPING-SKIP: unable="
+            .. tostring(unable_to_travel()) .. " status=" .. goal_status
+            .. " danger=" .. tostring(qw.danger_in_los)
+            .. " cloudy=" .. tostring(qw.position_is_cloudy)
+            .. " where=" .. where)
+        return false
+    end
+
+    -- Abort shopping if we have 3 runes — cancel travel and head to Zot.
+    if you.num_runes() >= 3 then
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "aborting spree, have 3 runes")
+        end
+        c_persist.done_shopping = true
+        crawl.flush_input()
+        update_goal()
+        return true
+    end
+
+    -- If we're standing on a shop, plan_shop (higher priority) handles it.
+    local feat_here = view.feature_at(0, 0)
+    if feat_here == "enter_shop" then
         return false
     end
 
     which_item = can_afford_any_shoplist_item()
     if not which_item then
-        -- Remove everything on shoplist.
-        clear_out_shopping_list()
-        -- Record that we are done shopping this game.
+        if debug_channel("shopping") then
+            note_decision("SHOPPING", "nothing affordable, done_shopping=true")
+        end
+        if branch_soon("Zot") then
+            clear_out_shopping_list()
+        end
         c_persist.done_shopping = true
         update_goal()
         return false
     end
 
-    magic("$" .. items.index_to_letter(which_item - 1))
+    -- Use $<letter> to travel to the exact shopping list item. This routes
+    -- to the specific shop that has the item, unlike magicfind which does a
+    -- text search and may find the wrong shop.
+    local item_name = items.shopping_list()[which_item][1]
+    local letter = items.index_to_letter(which_item - 1)
+
+    -- If shop travel fails repeatedly, the shop is unreachable.
+    if action_fail_count("shop") > 10 then
+        note_decision("SHOP", "SHOPPING: removing unreachable item "
+            .. item_name .. " after " .. action_fail_count("shop") .. " failures")
+        -- Remove the unreachable item from the shopping list via keystroke:
+        -- $ opens list, !! toggles to delete mode, <letter> deletes the item.
+        magic("$!!" .. letter)
+        update_goal()
+        return true
+    end
+
+    note_decision("SHOP", "SHOPPING: traveling to buy " .. item_name
+        .. " ($" .. letter .. ") where=" .. where)
+    magic("$" .. letter, "shop")
     return true
 end
 
@@ -779,7 +917,7 @@ function clear_out_shopping_list()
         return
     end
 
-    say("CLEARING SHOPPING LIST")
+    note_decision("SHOP", "CLEARING SHOPPING LIST")
     -- Press ! twice to toggle action to 'delete'
     local clear_shoplist_magic = "$!!"
     for n, it in ipairs(shoplist) do
@@ -787,7 +925,7 @@ function clear_out_shopping_list()
     end
     magic(clear_shoplist_magic)
     qw.do_dummy_action = false
-    coroutine.yield()
+    qw_yield("action")
 end
 
 -- These plans will only execute after a successful acquirement.
@@ -806,7 +944,7 @@ function choose_acquirement(acquire_type)
     local cur_equip = inventory_equip(const.inventory.equipped)
     for _, item in ipairs(acq_items) do
         local min_val, max_val = equip_value(item)
-        say("Offered " .. item.name() .. " with min/max values "
+        note_decision("ITEM", "Offered " .. item.name() .. " with min/max values "
             .. tostring(min_val) .. "/" .. tostring(max_val))
     end
 
@@ -816,10 +954,10 @@ function choose_acquirement(acquire_type)
             qw.acquirement_pickup = true
         end
 
-        say("ACQUIRING " .. acq_items[index].name())
+        note_decision("ITEM", "ACQUIRING " .. acq_items[index].name())
         return index
     else
-        say("GAVE UP ACQUIRING")
+        note_decision("ITEM", "GAVE UP ACQUIRING")
         return 1
     end
 end
@@ -865,7 +1003,7 @@ end
 function c_choose_identify()
     local id_item = get_unidentified_item()
     if id_item then
-        say("IDENTIFYING " .. id_item.name())
+        note_decision("ITEM", "IDENTIFYING " .. id_item.name())
         return item_letter(id_item)
     end
 end
@@ -873,7 +1011,7 @@ end
 function c_choose_brand_weapon()
     local weapon = get_brandable_weapon()
     if weapon then
-        say("BRANDING " .. weapon:name() .. ".")
+        note_decision("ITEM", "BRANDING " .. weapon:name() .. ".")
         return item_letter(weapon)
     end
 end
@@ -881,7 +1019,7 @@ end
 function c_choose_enchant_weapon()
     local weapon = get_enchantable_weapon()
     if weapon then
-        say("ENCHANTING " .. weapon:name() .. ".")
+        note_decision("ITEM", "ENCHANTING " .. weapon:name() .. ".")
         return item_letter(weapon)
     end
 end
@@ -889,7 +1027,7 @@ end
 function c_choose_enchant_armour()
     local armour = get_enchantable_armour()
     if armour then
-        say("ENCHANTING " .. armour:name() .. ".")
+        note_decision("ITEM", "ENCHANTING " .. armour:name() .. ".")
         return item_letter(armour)
     end
 end

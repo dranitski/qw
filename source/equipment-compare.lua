@@ -143,7 +143,7 @@ function best_inventory_equip(extra_item)
         equip.value = equip_set_value(equip)
 
         if debug_channel("items") then
-            dsay("Iteration #" .. tostring(iter_count) .. ": "
+            note_decision("EQUIP", "Iteration #" .. tostring(iter_count) .. ": "
                 .. equip_set_string(equip) .. "; value: "
                 .. tostring(equip.value))
         end
@@ -158,10 +158,10 @@ function best_inventory_equip(extra_item)
 
     if debug_channel("items") then
         if best_equip then
-            dsay("Best equip set: " .. equip_set_string(best_equip)
+            note_decision("EQUIP", "Best equip set: " .. equip_set_string(best_equip)
                 .. "; value: " .. tostring(best_equip.value))
         else
-            dsay("No best equip set found")
+            note_decision("EQUIP", "No best equip set found")
         end
     end
 
@@ -249,7 +249,7 @@ function best_equip_set()
 
         if worst_value and worst_value <= 0 then
             if debug_channel("items") then
-                dsay("Removing best equip set item " .. worst_item.name()
+                note_decision("EQUIP", "Removing best equip set item " .. worst_item.name()
                     .. " with value " .. tostring(worst_value))
             end
 
@@ -260,7 +260,7 @@ function best_equip_set()
     qw.best_equip = equip
 
     if debug_channel("items") then
-        dsay("Final best equip set: " .. equip_set_string(qw.best_equip)
+        note_decision("EQUIP", "Final best equip set: " .. equip_set_string(qw.best_equip)
             .. "; value: " .. tostring(qw.best_equip.value))
     end
 

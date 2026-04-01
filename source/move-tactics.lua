@@ -175,7 +175,10 @@ function step_reason(a1, a2)
             and not a1.near_ally
             and a2.ranged == 0
             and a2.adjacent == 0
-            and a2.unalert < a1.unalert then
+            and a2.unalert < a1.unalert
+            -- At low XL, don't waste time sneaking past monsters — the bot
+            -- needs the XP and can handle early D:1-D:3 enemies.
+            and you.xl() >= 6 then
         return "stealth"
     elseif not using_cleave()
             and not using_ranged_weapon()
@@ -269,7 +272,7 @@ function choose_tactical_step()
             or you.berserk() and qw.danger_in_los
             or you.constricted() then
         if debug_channel("move") then
-            dsay("No tactical step chosen: not safe to take step")
+            note_decision("TACTICAL", "No tactical step chosen: not safe to take step")
         end
 
         return
@@ -285,7 +288,7 @@ function choose_tactical_step()
             and a0.retreat_dist == 0
             and (a0.near_ally or a0.enemy_dist == const.inf_dist) then
         if debug_channel("move") then
-            dsay("No tactical step chosen: current position is good enough")
+            note_decision("TACTICAL", "No tactical step chosen: current position is good enough")
         end
 
         return
@@ -309,7 +312,7 @@ function choose_tactical_step()
         qw.tactical_reason = best_reason
 
         if debug_channel("move") then
-            dsay("Chose tactical step to "
+            note_decision("TACTICAL", "Chose tactical step to "
                 .. cell_string_from_position(qw.tactical_step)
                 .. " for reason: " .. qw.tactical_reason)
         end
@@ -318,6 +321,6 @@ function choose_tactical_step()
     end
 
     if debug_channel("move") then
-        dsay("No tactical step chosen: no valid step found")
+        note_decision("TACTICAL", "No tactical step chosen: no valid step found")
     end
 end

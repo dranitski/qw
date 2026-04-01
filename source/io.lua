@@ -2,21 +2,76 @@
 -- Some general input and message output handling, as well as in-game message
 -- parsing.
 
-function note(x)
-    crawl.take_note(you.turns() .. " ||| " .. x)
+-- Fatal assertion. Logs the error, force-quits the game, then errors out.
+function qw_assert(condition, msg)
+    if not condition then
+        note_decision("ASSERT", "FATAL: " .. msg)
+        -- Flush the log so the assert message survives the error().
+        local f = get_decision_log_file()
+        if f then
+            f:flush()
+        end
+        dump_stats()
+        write_reason("ERROR", msg)
+        qw.abort = true
+        -- Force-quit so headless runs don't hang waiting for input.
+        magic(control('q') .. "yes\r")
+        error("ASSERT: " .. msg)
+    end
 end
 
-function say(x)
-    crawl.mpr(you.turns() .. " ||| " .. x)
-    note(x)
-end
-
-function magic(command)
+function magic(command, action)
+    if action then
+        qw.expected_action = action
+    end
     crawl.process_keys(command .. string.char(27) .. string.char(27)
         .. string.char(27))
+    qw.did_magic = true
+end
+
+-- Guarded coroutine yield. Every yield site must go through this.
+-- "action" yields: magic() was called before yielding (free action like
+-- quiver). The turn counter must not advance across the yield.
+-- "throttle" yields: no action was sent, just pausing expensive computation.
+function qw_yield(mode)
+    if mode == "action" then
+        qw_assert(qw.did_magic,
+            "qw_yield('action') called but no magic() was sent")
+        qw.yield_turn = you.turns()
+    elseif mode == "throttle" then
+        qw_assert(not qw.did_magic,
+            "qw_yield('throttle') called but magic() was sent")
+    else
+        qw_assert(false,
+            "qw_yield() called with invalid mode: " .. tostring(mode))
+    end
+    coroutine.yield()
+    if mode == "action" then
+        qw_assert(you.turns() == qw.yield_turn,
+            "turn advanced across action yield (expected "
+            .. qw.yield_turn .. ", got " .. you.turns()
+            .. ") — free action consumed a turn")
+    end
+end
+
+-- Execute a named DCSS command directly. Strictly better than magic() for
+-- single-command actions: key-binding independent, no ESC workaround needed.
+function do_command(cmd, action)
+    if action then
+        qw.expected_action = action
+    end
+    crawl.do_commands({cmd})
+    qw.did_magic = true
+end
+
+-- Execute a targeted DCSS command (e.g. CMD_FIRE at coordinates).
+function do_targeted_command(cmd, x, y, aim_at_target)
+    qw.did_magic = true
+    return crawl.do_targeted_command(cmd, x, y, aim_at_target)
 end
 
 function magicfind(target, secondary)
+    qw.expected_action = "travel"
     if secondary then
         crawl.sendkeys(control('f') .. target .. "\r", arrowkey('d'), "\r\r" ..
             string.char(27) .. string.char(27) .. string.char(27))
@@ -131,12 +186,17 @@ function c_message(text, channel)
         qw.have_message = true
     elseif text:find("Done exploring") then
         local where = you.where()
+        note_decision("AUTOEXPLORE", "Done exploring " .. where)
+        qw.action_failed = "done_exploring"
         if c_persist.autoexplore[where] ~= const.autoexplore.full then
             c_persist.autoexplore[where] = const.autoexplore.full
             qw.want_goal_update = true
         end
     elseif text:find("Partly explored") then
         local where = you.where()
+        note_decision("AUTOEXPLORE", "Partly explored " .. where
+            .. " (" .. text .. ")")
+        qw.action_failed = "partly_explored"
         if text:find("transporter") then
             if c_persist.autoexplore[where] ~= const.autoexplore.transporter then
                 c_persist.autoexplore[where] = const.autoexplore.transporter
@@ -150,6 +210,8 @@ function c_message(text, channel)
         end
     elseif text:find("Could not explore") then
         local where = you.where()
+        note_decision("AUTOEXPLORE", "Could not explore " .. where)
+        qw.action_failed = "could_not_explore"
         if c_persist.autoexplore[where] ~= const.autoexplore.runed_door then
             c_persist.autoexplore[where] = const.autoexplore.runed_door
             qw.want_goal_update = true
@@ -224,8 +286,15 @@ function c_message(text, channel)
     elseif text:find("You pick up the Orb of Zot") then
         qw.want_goal_update = true
     elseif text:find("Zot's power touches on you") then
-        qw.want_goal_update = true
+        qw.stats.zot_damage = qw.stats.zot_damage + 1
+        local msg = "Zot damage on " .. where .. " at turn " .. you.turns()
+            .. " (hit #" .. qw.stats.zot_damage .. ")"
+        note_decision("ASSERT", "FATAL: " .. msg)
+        dump_stats()
+        write_reason("ERROR", msg)
+        qw.abort = true
     elseif text:find("You die...") then
+        dump_stats()
         crawl.sendkeys(string.char(27) .. string.char(27)
             .. string.char(27))
     end

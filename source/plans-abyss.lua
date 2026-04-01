@@ -31,7 +31,7 @@ function plan_pick_up_abyssal_rune()
 
     local rune_pos = item_map_positions[branch_runes(where_branch, true)[1]]
     if rune_pos and positions_equal(qw.map_pos, rune_pos) then
-        magic(",")
+        magic(",", "pickup")
         return true
     end
 

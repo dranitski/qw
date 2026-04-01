@@ -121,11 +121,10 @@ function want_scroll(item)
     end
 
     local wanted = { "acquirement", "brand weapon", "enchant armour",
-        "enchant weapon", "identify", "teleportation"}
+        "enchant weapon", "fog", "identify", "teleportation"}
 
     if qw.planning_zig then
         table.insert(wanted, "blinking")
-        table.insert(wanted, "fog")
     end
 
     return util.contains(wanted, subtype)
@@ -317,7 +316,7 @@ end
 function c_choose_identify()
     local id_item = get_unidentified_item()
     if id_item then
-        say("IDENTIFYING " .. id_item.name())
+        note_decision("ITEM", "IDENTIFYING " .. id_item.name())
         return item_letter(id_item)
     end
 end
@@ -325,7 +324,7 @@ end
 function c_choose_brand_weapon()
     local weapon = get_brandable_weapon()
     if weapon then
-        say("BRANDING " .. weapon:name() .. ".")
+        note_decision("ITEM", "BRANDING " .. weapon:name() .. ".")
         return item_letter(weapon)
     end
 end
@@ -333,7 +332,7 @@ end
 function c_choose_enchant_weapon()
     local weapon = get_enchantable_weapon()
     if weapon then
-        say("ENCHANTING " .. weapon:name() .. ".")
+        note_decision("ITEM", "ENCHANTING " .. weapon:name() .. ".")
         return item_letter(weapon)
     end
 end
@@ -341,7 +340,7 @@ end
 function c_choose_enchant_armour()
     local armour = get_enchantable_armour()
     if armour then
-        say("ENCHANTING " .. armour:name() .. ".")
+        note_decision("ITEM", "ENCHANTING " .. armour:name() .. ".")
         return item_letter(armour)
     end
 end

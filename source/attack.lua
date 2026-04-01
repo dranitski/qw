@@ -166,7 +166,7 @@ end
 
 function assess_ranged_position(attack, target_pos, second_pos)
     if debug_channel("ranged") then
-        dsay("Targeting " .. cell_string_from_position(target_pos))
+        note_decision("RANGED", "Targeting " .. cell_string_from_position(target_pos))
     end
 
     if secondary_pos
@@ -194,7 +194,7 @@ function assess_ranged_position(attack, target_pos, second_pos)
                 and not hit_target
                 and mons and not mons:ignores_player_projectiles() then
             if debug_channel("ranged") then
-                dsay("Aborted target: blocking monster at "
+                note_decision("RANGED", "Aborted target: blocking monster at "
                     .. cell_string_from_position(pos))
             end
 
@@ -209,10 +209,10 @@ function assess_ranged_position(attack, target_pos, second_pos)
                 and not mons:ignores_player_projectiles() then
             if debug_channel("ranged") then
                 if at_target_result then
-                    dsay("Using at-target key due to non-enemy monster at "
+                    note_decision("RANGED", "Using at-target key due to non-enemy monster at "
                         .. cell_string_from_position(pos))
                 else
-                    dsay("Aborted target: non-enemy monster at "
+                    note_decision("RANGED", "Aborted target: non-enemy monster at "
                         .. cell_string_from_position(pos))
                 end
             end
@@ -230,7 +230,7 @@ function assess_ranged_position(attack, target_pos, second_pos)
                 and destroys_items_at(pos)
                 and not destroys_items_at(target_pos) then
             if debug_channel("ranged") then
-                dsay("Using at-target key due to destructive terrain at "
+                note_decision("RANGED", "Using at-target key due to destructive terrain at "
                     .. pos_string(pos))
             end
 
@@ -249,7 +249,7 @@ function assess_ranged_position(attack, target_pos, second_pos)
                     and (attack.is_penetrating or hit_target) then
                 score_enemy_hit(result, mons, attack)
                 if debug_channel("ranged") then
-                    dsay("Attack scores after enemy at " .. pos_string(pos)
+                    note_decision("RANGED", "Attack scores after enemy at " .. pos_string(pos)
                         .. ": " .. stringify_table(result))
                 end
             end

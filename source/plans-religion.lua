@@ -16,7 +16,7 @@ function plan_abandon_god()
             or you.class() == "Chaos Knight"
                 and you.god() == "Xom"
                 and qw.ck_abandon_xom then
-        magic("aXYY")
+        magic("aXYY", "ability")
         return true
     end
 
@@ -46,7 +46,7 @@ function plan_use_altar()
         return false
     end
 
-    magic("<JY")
+    magic("<JY", "stairs")
     return true
 end
 

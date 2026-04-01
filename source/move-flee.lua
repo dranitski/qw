@@ -35,7 +35,7 @@ function update_flee_positions()
         if (not state or state.safe)
                 and map_is_reachable_at(pos) then
             if debug_channel("flee") then
-                dsay("Adding flee position #"
+                note_decision("FLEE", "Adding flee position #"
                     .. tostring(#qw.flee_positions + 1) .. " at "
                     .. cell_string_from_map_position(pos))
             end
@@ -53,7 +53,18 @@ function check_following_melee_enemies(radius)
 end
 
 function want_to_flee()
+    -- On D:1 there are no upstairs to flee to, but we can still retreat
+    -- toward the dungeon exit to create distance. Without this, the bot
+    -- stands and melees to death in unwinnable fights.
+    -- At low XL, be more cautious: flee at 50% HP since the HP pool is
+    -- tiny and a couple of unlucky hits means death.
     if not qw.can_flee_upstairs then
+        if qw.danger_in_los and not buffed() then
+            local flee_threshold = you.xl() < 5 and 50 or 25
+            if hp_is_low(flee_threshold) then
+                return true
+            end
+        end
         return false
     end
 
@@ -61,6 +72,17 @@ function want_to_flee()
     -- weapon, fleeing is our best bet.
     if (qw.danger_in_los or options.autopick_on)
             and (in_bad_form() or you.berserk() and using_ranged_weapon()) then
+        return true
+    end
+
+    -- Flee to safety when on berserk cooldown with enemies present.
+    -- Post-berserk the bot is slowed and vulnerable. Always flee on
+    -- cooldown — even taking opportunity attacks is better than dying
+    -- to sustained damage while slowed.
+    if qw.danger_in_los
+            and you.status("on berserk cooldown")
+            and not buffed()
+            and not check_brothers_in_arms(3) then
         return true
     end
 
@@ -76,9 +98,36 @@ function want_to_flee()
         return not buffed() and reason_to_rest(90)
     end
 
+    -- Flee from high-threat enemies even at full HP when under-leveled.
+    -- Also flee from any scary enemy (e.g. Sonja with distortion) at any
+    -- XL — distortion banishment is lethal regardless of level.
+    if not buffed() and have_high_threat() then
+        local scary = get_scary_enemy(const.duration.available)
+        if scary or you.xl() < 7 then
+            return true
+        end
+    end
+
     -- Don't flee from a place were we'll be opportunity attacked, and don't
-    -- flee when we have allies close by.
-    if check_following_melee_enemies(2) or check_allies(3) then
+    -- flee when we have allies close by. At low XL, override this at a
+    -- higher HP threshold since the HP pool is small. Without escape items,
+    -- use a higher gate since taking opportunity attacks is better than
+    -- standing and dying with no way out.
+    local have_escape = find_item("scroll", "teleportation")
+        or find_item("potion", "heal wounds")
+    local hp_gate
+    if you.xl() < 5 then
+        hp_gate = 50
+    elseif not have_escape and where_depth > 3 then
+        hp_gate = 40
+    else
+        hp_gate = 25
+    end
+    if check_following_melee_enemies(2) and not hp_is_low(hp_gate) then
+        return false
+    end
+
+    if check_allies(3) and not hp_is_low(hp_gate) then
         return false
     end
 
@@ -108,8 +157,24 @@ function want_to_flee()
         return false
     end
 
+    -- Flee at higher HP threshold on dangerous levels or without escape.
+    -- On Depths/Vaults:5, fight from stairs: engage, flee at 60% HP, rest,
+    -- return. Without escape items, flee even earlier.
+    local dangerous_area = in_branch("Depths") or in_branch("Zot")
+        or (in_branch("Vaults") and at_branch_end("Vaults"))
+    local flee_hp
+    if not have_escape and dangerous_area then
+        flee_hp = 60  -- stair-dance: flee early, rest, return
+    elseif not have_escape then
+        flee_hp = 75
+    elseif dangerous_area then
+        flee_hp = 80  -- cautious even with escape items
+    else
+        flee_hp = 90
+    end
+
     return not buffed()
-        and reason_to_rest(90)
+        and reason_to_rest(flee_hp)
         and qw.starting_spell ~= "Summon Small Mammal"
 end
 
@@ -119,7 +184,7 @@ function enemy_can_flee_attack(enemy, flee_dist)
         if debug_channel("flee-all") then
             local props = { is_ranged = "ranged", reach_range = "reach",
                 move_delay = "move delay" }
-            dsay("Ignoring monster that can't reach us: "
+            note_decision("FLEE", "Ignoring monster that can't reach us: "
                 .. monster_string(enemy, props))
         end
 
@@ -135,7 +200,7 @@ function enemy_can_flee_attack(enemy, flee_dist)
     if debug_channel("flee-all") then
         local props = { is_ranged = "ranged", reach_range = "reach",
             move_delay = "move delay" }
-        dsay("Evaluating " .. monster_string(enemy, props)
+        note_decision("FLEE", "Evaluating " .. monster_string(enemy, props)
             .. " with a closing distance of "
             .. tostring(closing_dist)
             .. " compared to a distance gain of "
@@ -173,7 +238,7 @@ function can_flee_to_destination(pos)
     local search = distance_map_search(qw.map_pos, pos, flee_function, 0)
     if not search then
         if debug_channel("flee") then
-            dsay("Unable to find move to flee position at "
+            note_decision("FLEE", "Unable to find move to flee position at "
                 .. cell_string_from_map_position(pos))
         end
 
@@ -181,7 +246,7 @@ function can_flee_to_destination(pos)
     end
 
     if debug_channel("flee") then
-        dsay("Evaluating flee position at "
+        note_decision("FLEE", "Evaluating flee position at "
             .. cell_string_from_map_position(pos) .. " with distance "
             .. tostring(search.dist))
     end
@@ -193,9 +258,15 @@ function can_flee_to_destination(pos)
             flee_attackers = flee_attackers + 1
         end
 
-        if flee_attackers > 2 or not extreme_threat and flee_attackers > 0 then
+        -- Allow fleeing through up to 1 attacker when HP is low and we have
+        -- no escape. Better to take a hit than die standing still.
+        local no_escape = not can_teleport()
+            and not find_item("potion", "heal wounds")
+        local max_flee_attackers = extreme_threat and 2
+            or (hp_is_low(33) and no_escape) and 1 or 0
+        if flee_attackers > max_flee_attackers then
             if debug_channel("flee") then
-                dsay("Not fleeing to " .. cell_string_from_map_position(pos)
+                note_decision("FLEE", "Not fleeing to " .. cell_string_from_map_position(pos)
                     .. " due to "  .. tostring(flee_attackers)
                     .. " or more attackers gaining distance")
             end
@@ -205,7 +276,7 @@ function can_flee_to_destination(pos)
     end
 
     if debug_channel("flee") then
-        dsay("Able to flee to " .. cell_string_from_map_position(pos))
+        note_decision("FLEE", "Able to flee to " .. cell_string_from_map_position(pos))
     end
 
     return true
@@ -217,12 +288,12 @@ function get_flee_move()
 
         if debug_channel("flee") then
             if result then
-                dsay("Found bad form flee move to "
+                note_decision("FLEE", "Found bad form flee move to "
                     .. cell_string_from_position(result.move)
                     .. " towards destination "
                     .. cell_string_from_map_position(result.dest))
             else
-                dsay("No bad form flee move found towards any destination")
+                note_decision("FLEE", "No bad form flee move found towards any destination")
             end
         end
 
@@ -232,12 +303,12 @@ function get_flee_move()
 
         if debug_channel("flee") then
             if result then
-                dsay("Found bad form flee move to "
+                note_decision("FLEE", "Found bad form flee move to "
                     .. cell_string_from_position(result.move)
                     .. " towards destination near unexplored areas at "
                     .. cell_string_from_map_position(result.dest))
             else
-                dsay("No bad form flee move found towards unexplored areas")
+                note_decision("FLEE", "No bad form flee move found towards unexplored areas")
             end
         end
 
@@ -255,12 +326,12 @@ function get_flee_move()
 
     if debug_channel("flee") then
         if result then
-            dsay("Found flee move to "
+            note_decision("FLEE", "Found flee move to "
                 .. cell_string_from_position(result.move)
                 .. " towards destination "
                 .. cell_string_from_map_position(result.dest))
         else
-            dsay("No move found towards any flee destination")
+            note_decision("FLEE", "No move found towards any flee destination")
         end
     end
 
